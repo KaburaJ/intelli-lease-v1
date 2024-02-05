@@ -113,11 +113,7 @@ async function startApp(pool) {
     app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
     app.use(express.json());
     app.use(
-      cors({
-        origin: "https://intelli-lease.onrender.com",
-        credentials: true,
-        optionSuccessStatus: 200,
-      })
+      cors()
     );
 
     app.set("trust proxy", 1);

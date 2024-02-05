@@ -30,7 +30,7 @@ export default function SignUp() {
         return;
       }
   
-      const response = await fetch("https://intelli-lease.onrender.com/user/signup", {
+      const response = await fetch("http://localhost:5000/user/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -75,7 +75,7 @@ export default function Home() {
               style={{
                 marginTop: "7%",
                 marginBottom: "4%",
-                marginLeft: "-8%",
+                marginLeft: "18%",
                 height: "40px",
               }}
               onPress={() => navigation.navigate("LeaseLand", { data: data })}
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   topBar: {
     display: "flex",
     flexDirection: "row",
-    gap: "5%", 
+    gap: 25, 
     margin: "1%",
     marginTop: "3%",
     borderRadius: 25,
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     marginLeft: "9%",
     marginRight: '4%',
     marginTop: "39%",
-    fontSize: "2.5rem", 
+    fontSize: 28, 
     color: "white",
     zIndex: 999,
     letterSpacing: 0.4,
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     marginLeft: "15%",
     marginTop: "5%",
     fontSize: 16,
-    fontWeight: "300",
+    fontWeight: 300,
     color: "green",
     marginBottom: "18%",
     color: "#000",

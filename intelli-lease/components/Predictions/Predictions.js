@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import {
   ScrollView,
@@ -8,74 +8,68 @@ import {
   TextInput,
   SafeAreaView,
   Dimensions,
+  TouchableOpacity,
 } from "react-native";
-import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import logo from "../../assets/app-logo.png";
 import { Image } from "react-native";
+import data from "../../assets/cropRecommendation.json";
+import { useRoute } from "@react-navigation/native";
+import Info from "./info";
+import Summary from "./summary";
 
 export default function Predictions() {
-  const line = {
-    labels: ["January", "February", "March", "April", "May", "June"],
-    datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43],
-        strokeWidth: 2,
-      },
-    ],
+  const route = useRoute();
+  const [isHistoryClicked, setIsHistoryClicked] = useState(true);
+  const [isSummaryClicked, setIsSummaryClicked] = useState(false);
+  const [isInfoClicked, setIsInfoClicked] = useState(false);
+  const [selectedText, setSelectedText] = useState("History");
+
+  const handleHistoryClick = () => {
+    setSelectedText("Hostory");
+    setIsHistoryClicked(true);
+    setIsInfoClicked(false);
+    setIsSummaryClicked(false);
   };
 
-  const barData = {
-    labels: ["January", "February", "March", "April", "May", "June"],
-    datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43],
-      },
-    ],
+  const handleSummaryClick = () => {
+    setSelectedText("Summary");
+    setIsHistoryClicked(false);
+    setIsInfoClicked(false);
+    setIsSummaryClicked(true);
   };
 
-  const pieData = [
+  const handleInfoClick = () => {
+    setSelectedText("Info");
+    setIsHistoryClicked(false);
+    setIsInfoClicked(true);
+    setIsSummaryClicked(false);
+  };
+
+  const uniqueCropClasses = Array.from(new Set(data.map((item) => item.label)));
+
+  const cropLabelsRow = {
+    column1: "Crop Types:",
+    column2: uniqueCropClasses.map((cropClass) => cropClass).join("\n"),
+  };
+
+  const tableData = [
+    { column1: "Parameter", column2: "Metrics" },
+    { column1: "Focus Area:", column2: "Kenya" },
+    { column1: "Number of Land Features:", column2: "7" },
+    { column1: "Number of Crop Types:", column2: "23" },
     {
-      name: "Seoul",
-      population: 21500000,
-      color: "rgba(131, 167, 234, 1)",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
+      column1: "Land Features:",
+      column2:
+        "Phosphorous Levels\nPotassium Levels\nNitrogen Levels\npH Levels\nRainfall Data\nTemperature Data\nHumidity Data",
     },
-    {
-      name: "Toronto",
-      population: 2800000,
-      color: "#F00",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-    {
-      name: "Beijing",
-      population: 527612,
-      color: "red",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-    {
-      name: "New York",
-      population: 8538000,
-      color: "#ffffff",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
-    {
-      name: "Moscow",
-      population: 11920000,
-      color: "rgb(0, 0, 255)",
-      legendFontColor: "#7F7F7F",
-      legendFontSize: 15,
-    },
+    cropLabelsRow,
   ];
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
         <View style={styles.innerContainer}>
-        <View>
+          <View>
             <Image
               source={logo}
               style={{
@@ -89,95 +83,58 @@ export default function Predictions() {
               }}
             />
           </View>
-          <Text style={[styles.text, {marginTop:'5%', fontWeight:'lighter'}]}>Sample of our Predictions</Text>
-          <Text style={styles.subTextSmall}>Visual of Available data</Text>
-          <PieChart
-            data={pieData}
-            width={Dimensions.get("window").width * 0.96}
-            height={220}
-            chartConfig={{
-              backgroundColor: "fb8c00",
-              backgroundGradientFrom: "green",
-              backgroundGradientTo: "#71f075",
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
-                borderRadius: 15,
-              },
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-              marginLeft: -8,
-            }}
-            accessor="population"
-            backgroundColor="transparent"
-            paddingLeft="15"
-            absolute
-          />
-          <Text style={styles.subTextSmall}>
-            Visual of Arable land Areas and crops grown
+          <Text
+            style={[styles.text, { marginTop: "5%", fontWeight: "lighter" }]}
+          >
+            Sample of our Predictions
           </Text>
-          <View>
-            <LineChart
-              data={{
-                labels: line.labels,
-                datasets: [
-                  {
-                    data: line.datasets[0].data,
-                    strokeWidth: 2,
-                  },
-                ],
-              }}
-              width={Dimensions.get("window").width * 0.96}
-              height={420}
-              yAxisLabel={"$"}
-              chartConfig={{
-                backgroundColor: "fb8c00",
-                backgroundGradientFrom: "green",
-                backgroundGradientTo: "#71f075",
-                decimalPlaces: 2,
-                color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                style: {
-                  borderRadius: 15,
-                },
-              }}
-              bezier
-              style={{
-                marginVertical: 8,
-                borderRadius: 16,
-                marginLeft: 10,
-              }}
-            />
+          <View style={styles.subTextRow}>
+            {[
+              {
+                text: "History",
+                onPress: handleHistoryClick,
+                marginTop: "3.5%",
+              },
+              {
+                text: "Summary",
+                onPress: handleSummaryClick,
+                marginTop: "3.5%",
+              },
+              {
+                text: "Info",
+                onPress: handleInfoClick,
+                marginTop: "3%",
+              },
+            ].map(({ text, onPress, marginTop }) => (
+              <TouchableOpacity
+                key={text}
+                onPress={onPress}
+                style={{ marginTop }}
+              >
+                <Text
+                  style={[
+                    styles.subText,
+                    {
+                      color: selectedText === text ? "green" : "black",
+                      borderBottomColor:
+                        selectedText === text ? "green" : "transparent",
+                      borderBottomWidth: selectedText === text ? 3 : 0,
+                    },
+                  ]}
+                >
+                  {text}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <Text style={styles.subTextSmall}>
-            Visual of Arable land Areas and crops grown
-          </Text>
-          <BarChart
-            data={barData}
-            width={Dimensions.get("window").width * 0.96}
-            height={420}
-            yAxisLabel={"$"}
-            chartConfig={{
-              backgroundColor: "fb8c00",
-              backgroundGradientFrom: "green",
-              backgroundGradientTo: "#71f075",
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
-                borderRadius: 15,
-              },
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-              marginLeft: 10,
-              marginBottom: -22,
-            }}
-          />
         </View>
+        {isHistoryClicked && (
+          <View>
+            <Text>History</Text>
+          </View>
+        )}
+        {isSummaryClicked && <Summary data={tableData} />}
+        {isInfoClicked && <Info />}
         <StatusBar style="auto" />
       </ScrollView>
     </SafeAreaView>
@@ -206,7 +163,7 @@ const styles = StyleSheet.create({
     marginLeft: "4%",
     fontSize: 38,
     color: "green",
-    fontWeight:'lighter',
+    fontWeight: "lighter",
     marginBottom: "5%",
   },
   subText: {
@@ -253,5 +210,97 @@ const styles = StyleSheet.create({
   },
   rowText: {
     color: "green",
+  },
+  subText: {
+    marginLeft: "4%",
+    fontSize: 30,
+    fontWeight: "300",
+    color: "green",
+    marginBottom: "5%",
+  },
+  subTextSmall: {
+    marginLeft: "4%",
+    marginRight: "4%",
+    fontSize: 28,
+    fontWeight: "300",
+    color: "green",
+    marginTop: "10%",
+    marginBottom: "3%",
+  },
+  map: {
+    backgroundColor: "#E2F6E9",
+    height: 405,
+    width: "100%",
+    marginBottom: "5%",
+    flex: 1,
+  },
+  searchInput: {
+    height: 40,
+    borderColor: "#E2F6E9",
+    borderWidth: 2,
+    marginLeft: "5%",
+    marginRight: "5%",
+    paddingLeft: "5%",
+    borderRadius: 18,
+    marginBottom: "10%",
+  },
+  countyScrollView: {
+    flex: 1,
+  },
+  countyView: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    marginLeft: 24,
+  },
+  row: {
+    flexBasis: "28.33%",
+    height: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 22,
+    border: "none",
+    marginRight: 22,
+    borderRadius: 25,
+    backgroundColor: "#E2F6E9",
+  },
+  rowText: {
+    color: "green",
+  },
+  picker: {
+    height: 50,
+    width: "90%",
+    alignSelf: "center",
+    marginBottom: 10,
+  },
+  pickerItem: {
+    color: "black",
+    fontSize: 16,
+  },
+  image: {
+    width: 450,
+    height: 450,
+    resizeMode: "cover",
+    marginLeft: 18,
+  },
+  image1: {
+    width: 450,
+    height: 450,
+    resizeMode: "contain",
+    marginLeft: 18,
+  },
+  subTextRow: {
+    flexDirection: "row",
+    marginLeft: "13.5%",
+    alignItems: "center",
+    marginBottom: "2%",
+  },
+  subText: {
+    marginLeft: "15%",
+    marginTop: "5%",
+    fontSize: 18,
+    fontWeight: 300,
+    color: "green",
+    marginBottom: "18%",
+    color: "#000",
   },
 });

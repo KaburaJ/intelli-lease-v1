@@ -17,7 +17,7 @@ export default function AdminHome() {
                 source={homeImg}
                 style={{
                   width: 450,
-                  height: 600,
+                  height: 450,
                   alignItems: "center",
                   marginBottom: "4%",
                   resizeMode: "cover",

@@ -140,18 +140,8 @@ module.exports = {
           .input("UserEmail", user.UserEmail)
           .input("UserPasswordHash", hashedPassword);
 
-        const results = await request.execute("[dbo].[AddUsers]");
+        const results = await request.execute("dbo.AddUser");
         res.json(results.recordset);
-
-        console.log("CONNECTED AT SIGN UP");
-        console.log("Received request body:", req.body);
-        console.log("Hashed Password:", hashedPassword);
-        console.log("Parameters sent to stored procedure:", {
-          FirstName: user.FirstName,
-          LastName: user.LastName,
-          UserEmail: user.UserEmail,
-          UserPasswordHash: hashedPassword,
-        });
 
         const emailBody = await ejs.renderFile(
           path.join(__dirname, "../views/email.ejs"),
@@ -180,7 +170,7 @@ module.exports = {
         const request = new mssql.Request(sql);
         request.input("UserEmail", user.UserEmail);
 
-        const result = await request.execute('dbo.loginProcedure');
+        const result = await request.query('SELECT * FROM Users WHERE UserEmail = @UserEmail');
 
         if (result.recordset.length) {
           const dbPassword = result.recordset[0].UserPasswordHash;
@@ -242,7 +232,7 @@ module.exports = {
             success: true,
             message: "You have been logged out",
           });
-          res.redirect("/auth/google");
+          res.redirect("/user/login");
         });
       }
     });
