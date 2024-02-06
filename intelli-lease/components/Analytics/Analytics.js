@@ -406,29 +406,31 @@ export default function Analytics() {
       );
       const data = res.data;
       setWeatherData(data);
-      setForm((prevForm) => ({
-        ...prevForm,
-        temperature: weatherData.hourly.temperature_2m[0],
-      }));
-      setForm((prevForm) => ({
-        ...prevForm,
-        humidity: weatherData.hourly.relative_humidity_2m[0],
-      }));
-      setForm((prevForm) => ({
-        ...prevForm,
-        rainfall: weatherData.hourly.rain[0],
-      }));
+      // setForm((prevForm) => ({
+      //   ...prevForm,
+      //   temperature: weatherData.hourly.temperature_2m[0],
+      // }));
+      // setForm((prevForm) => ({
+      //   ...prevForm,
+      //   humidity: weatherData.hourly.relative_humidity_2m[0],
+      // }));
+      // setForm((prevForm) => ({
+      //   ...prevForm,
+      //   rainfall: weatherData.hourly.rain[0],
+      // }));
     } catch (error) {}
   };
 
+  if(longitude && latitude){
   useEffect(() => {
     getPhosphorousData();
     getPotassiumData();
     getNitrogenData();
     getPHData();
     getClimateData();
-    handlePredict()
+    // handlePredict()
   }, [longitude, latitude]);
+}
 
   // if (weatherData) {
   //   setForm((prevForm) => ({
@@ -960,9 +962,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   image: {
-    width: 450,
-    height: 450,
+    width: 350,
+    height: 350,
     resizeMode: "cover",
-    marginLeft: 18,
+    marginLeft: 5,
+    marginRight:5
   },
 });

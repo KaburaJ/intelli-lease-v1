@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 const userMiddleware = (req, res, next) => {
-  const token = req.headers.authorization;
+  const token = req.body.token || req.headers['x-access-token'];
 
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized - Token not provided' });

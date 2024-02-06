@@ -73,9 +73,9 @@ export default function Home() {
             </View>
             <TouchableOpacity
               style={{
-                marginTop: "7%",
+                marginTop: "10%",
                 marginBottom: "4%",
-                marginLeft: "18%",
+                marginLeft: "8%",
                 height: "40px",
               }}
               onPress={() => navigation.navigate("LeaseLand", { data: data })}
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   text: {
     marginLeft: "9%",
     marginRight: '4%',
-    marginTop: "39%",
+    marginTop: "54%",
     fontSize: 28, 
     color: "white",
     zIndex: 999,
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
   },
   subTextRow: {
     flexDirection: "row",
-    marginLeft: "13.5%",
+    marginLeft: "8%",
     alignItems: 'center',
     marginBottom: "2%", 
   },

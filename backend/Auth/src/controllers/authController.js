@@ -164,52 +164,97 @@ module.exports = {
 
       const user = value;
       console.log(user);
+
       const sql = await mssql.connect(config);
 
-      if (sql.connected) {
-        const request = new mssql.Request(sql);
-        request.input("UserEmail", user.UserEmail);
+      try {
+        if (sql.connected) {
+          const request = new mssql.Request(sql);
+          request.input("UserEmail", user.UserEmail);
 
-        const result = await request.query('SELECT * FROM Users WHERE UserEmail = @UserEmail');
-
-        if (result.recordset.length) {
-          const dbPassword = result.recordset[0].UserPasswordHash;
-          const passwordsMatch = await bcrypt.compare(
-            user.UserPasswordHash,
-            dbPassword
+          const result = await request.query(
+            "SELECT * FROM Users WHERE UserEmail = @UserEmail"
           );
 
-          if (passwordsMatch) {
-            const user = result.recordset[0];
-            
-            const token = jwt.sign({ UserID: user.UserID }, process.env.JWT_SECRET, {
-              expiresIn: '1h', 
-            });
-            console.log(token);
+          if (result.recordset.length) {
+            const dbPassword = result.recordset[0].UserPasswordHash;
+            const passwordsMatch = await bcrypt.compare(
+              user.UserPasswordHash,
+              dbPassword
+            );
 
-              if (error) {
-                console.error("Session save error:", error);
-              } else {
-                res.status(200).json({
-                  success: true,
-                  message: "Logged in successfully",
-                  token: token,
-                  user: user,
+            if (passwordsMatch) {
+              const loggedInUser = result.recordset[0];
+              console.log("logged in user", loggedInUser);
+
+              const token = jwt.sign(
+                { UserID: loggedInUser.UserID },
+                process.env.JWT_SECRET,
+                {
+                  expiresIn: "30d",
+                }
+              );
+              console.log(token);
+
+              const insertTokenQuery = `
+              INSERT INTO Tokens (UserID, Token, ExpiryDate)
+              VALUES (@UserID, @Token, @ExpiryDate);
+            `;
+
+              const tokenRecord = {
+                UserID: loggedInUser.UserID,
+                Token: token,
+                ExpiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              };
+
+              const request = new mssql.Request(sql);
+
+              request.input(
+                "UserID",
+                mssql.UniqueIdentifier,
+                tokenRecord.UserID
+              );
+              request.input("Token", mssql.NVarChar(500), tokenRecord.Token);
+              request.input(
+                "ExpiryDate",
+                mssql.DateTime,
+                tokenRecord.ExpiryDate
+              );
+
+              try {
+                await request.query(insertTokenQuery);
+                console.log("Token inserted successfully");
+              } catch (error) {
+                console.error("Error inserting token:", error);
+                res.status(500).json({
+                  success: false,
+                  message: "Error inserting token",
+                  error: error.message,
                 });
               }
+
+              res.status(200).json({
+                success: true,
+                message: "Logged in successfully",
+                token: token,
+                user: loggedInUser,
+              });
+            } else {
+              res.status(401).json({
+                success: false,
+                message: "Incorrect password",
+              });
+            }
           } else {
-            res.status(401).json({
-              success: false,
-              message: "Incorrect password",
-            });
+            res.status(404).json({ success: false, message: "No user found" });
           }
         } else {
-          res.status(404).json({ success: false, message: "No user found" });
+          res
+            .status(500)
+            .json({ success: false, message: "Database connection error" });
         }
-      } else {
-        res
-          .status(500)
-          .json({ success: false, message: "Database connection error" });
+      } finally {
+        await sql.close();
       }
     } catch (error) {
       res.status(500).json({
@@ -219,22 +264,63 @@ module.exports = {
     }
   },
 
-  logoutUser: (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        res.status(200).json({
-          success: true,
-          message: "You have been logged out",
-        });
-      } else {
-        req.logout(() => {
+  logoutUser: async (req, res) => {
+    try {
+      const decodedToken = jwt.verify(req.body.token, process.env.JWT_SECRET);
+      const userID = decodedToken.UserID;
+
+      const getTokenQuery = `
+        SELECT Token FROM Tokens
+        WHERE UserID = @UserID AND IsDeleted = 0;
+      `;
+
+      const sql = await mssql.connect(config);
+
+      try {
+        if (sql.connected) {
+          const request = new mssql.Request(sql);
+          request.input("UserID", userID);
+
+          const result = await request.query(getTokenQuery);
+
+          if (result.recordset.length === 0) {
+            return res
+              .status(401)
+              .json({
+                success: false,
+                message: "Token not found or already deleted",
+              });
+          }
+
+          const token = result.recordset[0].Token;
+
+          const updateTokenQuery = `
+            UPDATE Tokens
+            SET IsDeleted = 1
+            WHERE UserID = @UserID AND Token = @Token;
+          `;
+
+          await request.query(updateTokenQuery, {
+            UserID: userID,
+            Token: token,
+          });
+
           res.status(200).json({
             success: true,
             message: "You have been logged out",
           });
-          res.redirect("/user/login");
-        });
+        } else {
+          throw new Error("Database connection error");
+        }
+      } finally {
+        await sql.close();
       }
-    });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Logout error",
+      });
+    }
   },
 };

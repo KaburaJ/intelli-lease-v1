@@ -9,7 +9,6 @@ import {
   TextInput,
   Alert,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // Import AsyncStorage
 
 export default function SignUp() {
   const navigation = useNavigation();
@@ -19,7 +18,7 @@ export default function SignUp() {
     LastName: "",
     UserEmail: "",
     UserPasswordHash: "",
-    UserCPassword: "",
+    UserCPassword: ""
   });
 
   const handleSignUp = async () => {
@@ -29,8 +28,10 @@ export default function SignUp() {
         Alert.alert("Passwords do not match");
         return;
       }
+
+      console.log(form);
   
-      const response = await fetch("http://localhost:5000/user/signup", {
+      const response = await fetch("http://192.168.1.56:5000/user/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -673,16 +673,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   image: {
-    width: 450,
-    height: 450,
+    width: 350,
+    height: 350,
     resizeMode: "cover",
-    marginLeft: 18,
+    marginLeft: 5,
+    marginRight:5
   },
   image1: {
-    width: 450,
+    width: 400,
     height: 450,
     resizeMode: "contain",
-    marginLeft: 18,
+    marginLeft: 10,
   },
   subTextRow: {
     flexDirection: "row",
