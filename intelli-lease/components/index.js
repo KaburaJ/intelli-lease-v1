@@ -9,6 +9,7 @@ import LeaseLandPage from "./Lease/Lease";
 import LandForLease from "./Lease/LandForLease";
 import AdminLandListings from "./Admin/AdminLandListings";
 import AdminLandReport from "./Admin/AdminLandReport";
+import AdminAllUsers from "./Admin/AdminAllUsers";
 
 export {
   Home,
@@ -28,5 +29,6 @@ export {
   LeaseLandPage,
   LandForLease,
   AdminLandListings,
-  AdminLandReport
+  AdminLandReport,
+  AdminAllUsers
 }

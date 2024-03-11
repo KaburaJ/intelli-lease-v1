@@ -20,12 +20,17 @@ import homeImg from "../../assets/surveyor1.png";
 import { Image } from "react-native";
 
 export default function Home() {
+  const route = useRoute()
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState(data);
   const [isPlacesClicked, setIsPlacesClicked] = useState(true);
   const [selectedText, setSelectedText] = useState("Places");
   const navigation = useNavigation();
 
+  const user = route.params && route.params.user;
+  // console.log(route.params);
+
+  
   const debouncedSearch = _debounce((text) => {
     const newData = data.filter((county) =>
       county.admin_name.toLowerCase().includes(text.toLowerCase())
@@ -51,6 +56,26 @@ export default function Home() {
     setIsPlacesClicked(false);
   };
 
+  const handleCountyNameClick = (countyName) => {
+
+    Alert.alert(
+      null,
+      `You are about to view land available for lease in ${countyName}`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Take me there",
+          style: { color: "green", fontWeight: "normal" },
+          onPress: () => {
+            navigation.navigate("LandForLease", {countyName});
+          },
+        },
+      ]
+    );
+  }
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
@@ -78,8 +103,8 @@ export default function Home() {
                 marginLeft: "8%",
                 height: "40px",
               }}
-              onPress={() => navigation.navigate("LeaseLand", { data: data })}
-            >
+              onPress={() => navigation.navigate("LeaseLand")}
+              >
               <Button
                 style={[
                   styles.rowText,
@@ -181,25 +206,7 @@ export default function Home() {
                   <TouchableOpacity
                     key={index}
                     style={styles.row}
-                    onPress={() => {
-                      Alert.alert(
-                        null,
-                        `You are about to view land available for lease in ${county.admin_name}`,
-                        [
-                          {
-                            text: "Cancel",
-                            style: "cancel",
-                          },
-                          {
-                            text: "Take me there",
-                            style: { color: "green", fontWeight: "normal" },
-                            onPress: () => {
-                              navigation.navigate("LandForLease");
-                            },
-                          },
-                        ]
-                      );
-                    }}
+                    onPress={() => handleCountyNameClick(county.admin_name)}
                   >
                     <Text style={styles.rowText}>{county.admin_name}</Text>
                   </TouchableOpacity>

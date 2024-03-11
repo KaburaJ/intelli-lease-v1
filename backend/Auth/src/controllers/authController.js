@@ -141,17 +141,18 @@ module.exports = {
           .input("UserPasswordHash", hashedPassword);
 
         const results = await request.execute("dbo.AddUser");
-        res.json(results.recordset);
+        res.json(results.recordset[0]);
+        console.log(results);
 
-        const emailBody = await ejs.renderFile(
-          path.join(__dirname, "../views/email.ejs"),
-          { userName: user.FirstName }
-        );
-        sendMail(user.UserEmail, "Verification Email", emailBody);
+        // const emailBody = await ejs.renderFile(
+        //   path.join(__dirname, "../views/email.ejs"),
+        //   { userName: user.FirstName }
+        // );
+        // sendMail(user.UserEmail, "Verification Email", emailBody);
       }
     } catch (e) {
       console.error(e);
-      res.status(500).send("An error occurred when registering a user");
+      res.status(500).send(`An error occurred when registering a user: ${e}`);
     }
   },
 
@@ -197,6 +198,11 @@ module.exports = {
               console.log(token);
 
               const insertTokenQuery = `
+              IF EXISTS (SELECT * FROM Tokens WHERE UserID = @UserID)
+              UPDATE Tokens
+              SET Token = @Token, ExpiryDate = @ExpiryDate
+              WHERE UserID = @UserID
+            ELSE
               INSERT INTO Tokens (UserID, Token, ExpiryDate)
               VALUES (@UserID, @Token, @ExpiryDate);
             `;
@@ -266,8 +272,7 @@ module.exports = {
 
   logoutUser: async (req, res) => {
     try {
-      const decodedToken = jwt.verify(req.body.token, process.env.JWT_SECRET);
-      const userID = decodedToken.UserID;
+      const user = req.body
 
       const getTokenQuery = `
         SELECT Token FROM Tokens
@@ -279,17 +284,16 @@ module.exports = {
       try {
         if (sql.connected) {
           const request = new mssql.Request(sql);
-          request.input("UserID", userID);
+          request.input("UserID", user.UserID);
+          request.input("Token", user.Token);
 
           const result = await request.query(getTokenQuery);
 
           if (result.recordset.length === 0) {
-            return res
-              .status(401)
-              .json({
-                success: false,
-                message: "Token not found or already deleted",
-              });
+            return res.status(401).json({
+              success: false,
+              message: "Token not found or already deleted",
+            });
           }
 
           const token = result.recordset[0].Token;
@@ -301,7 +305,7 @@ module.exports = {
           `;
 
           await request.query(updateTokenQuery, {
-            UserID: userID,
+            UserID: user.UserID,
             Token: token,
           });
 

@@ -128,9 +128,7 @@ const userRoutes = express.Router();
 
 userRoutes.post('/user/signup', registerUser); 
 userRoutes.post('/user/login', loginUser);
-userRoutes.get('/user/logout', logoutUser);
-
-userRoutes.use(verifyToken); 
+userRoutes.post('/user/logout', logoutUser);
 
 const isAuthorized = (allowedRoles) => {
     return (req, res, next) => {
@@ -142,7 +140,7 @@ const isAuthorized = (allowedRoles) => {
     };
 };
 
-userRoutes.get('/protected', isAuthorized([1, 'user']), (req, res) => {
+userRoutes.use('/protected', verifyToken, isAuthorized([1, 'user']), (req, res) => {
   res.send('Hello!');
 });
 

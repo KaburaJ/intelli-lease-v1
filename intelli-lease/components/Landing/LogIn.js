@@ -15,138 +15,163 @@ import jwtDecode from "jwt-decode";
 
 export default function LogIn({ onSwitchToSignUp }) {
   const navigation = useNavigation();
-  const { login } = useAuth()
+  const { login } = useAuth();
 
   const [form, setForm] = useState({
     UserEmail: "",
     UserPasswordHash: "",
   });
 
-  const handleLogIn = () => {
+  const navigateToHome = (userEmail, userRole, responseData) => {
+    console.log("User object before login:", { username: userEmail });
+    login({ username: userEmail }, userRole);
+    console.log("Navigating to WelcomeUserHomeTab with UserEmail:", userEmail);
+    navigation.navigate("WelcomeUserHomeTab", {
+      screen: "Home",
+    });
+  };
 
-    const userRole = form.UserEmail.toLowerCase().includes('admin')? 'admin': 'user';
+  const handleLogIn = async () => {
+    try {
+      const response = await fetch("http://172.28.144.1:5001/user/login", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
 
-    login({username: form.UserEmail}, userRole)
-    navigation.navigate("WelcomeUserHomeTab")
-  }
+      console.log("API Response Status:", response.status);
+      console.log("API Response Status Text:", response.statusText);
 
-  // const handleLogIn = async () => {
-  //   try {
-  //     const response = await fetch(
-  //       "https://intelli-lease.onrender.com/user/login",
-  //       {
-  //         method: "POST",
-  //         credentials: "include",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify(form),
-  //       }
-  //     );
+      const responseData = await response.json();
+      console.log("response data", responseData);
 
-  //     console.log("API Response Status:", response.status);
-  //     console.log("API Response Status Text:", response.statusText);
+      if (!response.ok) {
+        const errorMessage =
+          responseData.error || "Invalid username or password";
+        throw new Error(errorMessage);
+      }
 
-  //     const responseData = await response.json();
-  //     console.log("response data", responseData);
-  //     console.log("response", response);
-  //     console.log("API Response Data:", responseData);
+      const token = responseData.token;
+      console.log("token", token);
 
-  //     if (!response.ok) {
-  //       const errorMessage =
-  //         responseData.error || "Invalid username or password";
-  //       throw new Error(errorMessage);
-  //     }
+      if (!token) {
+        throw new Error("Token not found in response");
+      }
 
-  //     const userData = responseData.result;
+      const userEmail = responseData?.user?.UserEmail;
+      if (!userEmail) {
+        throw new Error("User email not found in response");
+      }
 
-  //     const token = responseData && responseData.token;
-  //     console.log(token);
+      setForm({ UserEmail: "", UserPasswordHash: "" });
 
-  //     if (!token) {
-  //       throw new Error("Token not found in response");
-  //     }
+      const storeParamsData = async (
+        UserEmail,
+        FirstName,
+        LastName,
+        UserID,
+        token
+      ) => {
+        try {
+          await AsyncStorage.setItem("FirstName", FirstName);
+          await AsyncStorage.setItem("LastName", LastName);
+          await AsyncStorage.setItem("UserEmail", UserEmail);
+          await AsyncStorage.setItem("UserID", UserID);
+          await AsyncStorage.setItem("token", token);
+        } catch (e) {
+          console.error(`Failed to store params value in AsyncStorage: ${e}`);
+        }
+      };
 
-  //     await AsyncStorage.setItem("token", token);
+      storeParamsData(
+        responseData.user.UserEmail,
+        responseData.user.FirstName,
+        responseData.user.LastName,
+        responseData.user.UserID,
+        responseData.token
+      );
 
-  //     // const decodedToken = jwtDecode(token);
-  //     // console.log("Decoded Token:", decodedToken);
+      const userRole = userEmail.toLowerCase().includes("admin")
+        ? "admin"
+        : "user";
+      const user = { username: userEmail };
+      login(user);
 
-  //     navigation.navigate("Main", {
-  //       screen: "LeaseLand",
-  //       UserEmail: form.UserEmail,
-  //     });
-  //     const user = { username: form.UserEmail };
-  //     login(user);
-
-  //     setForm({ UserEmail: "", UserPasswordHash: "" });
-
-  //     Alert.alert("LogIn successful");
-  //   } catch (error) {
-  //     console.error("Error signing in:", error.message);
-  //     Alert.alert("LogIn failed", error.message);
-  //   }
-  // };
+      Alert.alert("LogIn successful", "User logged in successfully", [
+        {
+          text: "OK",
+          onPress: () => navigateToHome(userEmail, userRole, responseData),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error signing in:", error.message);
+      const message = error.message || "Invalid username or password";
+      Alert.alert("LogIn failed", message);
+    }
+  };
 
   return (
     <SafeAreaView>
-    <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <Text style={styles.subtitle}>Log in to your account</Text>
-      </View>
-
-      <View style={styles.form}>
-        <View style={styles.input}>
-          <Text style={styles.inputLabel}>Email address</Text>
-
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            onChangeText={(UserEmail) => setForm({ ...form, UserEmail })}
-            placeholder="john@example.com"
-            placeholderTextColor="#6b7280"
-            style={styles.inputControl}
-            value={form.UserEmail}
-          />
+      <View style={styles.mainContainer}>
+        <View style={styles.header}>
+          <Text style={styles.subtitle}>Log in to your account</Text>
         </View>
 
-        <View style={styles.input}>
-          <Text style={styles.inputLabel}>Password</Text>
+        <View style={styles.form}>
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Email address</Text>
 
-          <TextInput
-            autoCorrect={false}
-            onChangeText={(UserPasswordHash) =>
-              setForm({ ...form, UserPasswordHash })
-            }
-            placeholder="********"
-            placeholderTextColor="#6b7280"
-            style={styles.inputControl}
-            secureTextEntry={true}
-            value={form.UserPasswordHash}
-          />
-        </View>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              onChangeText={(UserEmail) => setForm({ ...form, UserEmail })}
+              placeholder="john@example.com"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              value={form.UserEmail}
+            />
+          </View>
 
-        <View style={styles.formAction}>
-          <TouchableOpacity onPress={handleLogIn}>
-            <View style={styles.btn}>
-              <Text style={styles.btnText}>Log in</Text>
-            </View>
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Password</Text>
+
+            <TextInput
+              autoCorrect={false}
+              onChangeText={(UserPasswordHash) =>
+                setForm({ ...form, UserPasswordHash })
+              }
+              placeholder="********"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              secureTextEntry={true}
+              value={form.UserPasswordHash}
+            />
+          </View>
+
+          <View style={styles.formAction}>
+            <TouchableOpacity onPress={handleLogIn}>
+              <View style={styles.btn}>
+                <Text style={styles.btnText}>Log in</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.switchButton}>
+            <Text style={{ color: "black" }}>
+              Don't have an account?{" "}
+              <Text
+                onPress={onSwitchToSignUp}
+                style={{ textDecorationLine: "underline", color: "green" }}
+              >
+                Sign Up
+              </Text>
+            </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.switchButton}>
-          <Text style={{ color: "black" }}>
-            Don't have an account?{" "}
-            <Text
-              onPress={onSwitchToSignUp}
-              style={{ textDecorationLine: "underline", color: "green" }}
-            >
-              Sign Up
-            </Text>
-          </Text>
-        </TouchableOpacity>
       </View>
-    </View>
     </SafeAreaView>
   );
 }
@@ -195,7 +220,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "500",
     color: "#929292",
-    marginTop: '-5%',
+    marginTop: "-5%",
     textAlign: "center",
   },
   input: {

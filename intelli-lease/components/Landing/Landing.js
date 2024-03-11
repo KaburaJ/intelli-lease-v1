@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     color: "#222",
   },
   switchButton: {
-    marginTop: "195%",
+    marginTop: "165%",
     marginLeft: "7%",
     position: "absolute",
   },

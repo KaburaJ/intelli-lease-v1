@@ -18,15 +18,15 @@ import {
   LeaseLandPage,
   LandForLease,
   AdminLandReport,
+  AdminAllUsers,
 } from "./components";
 import { SafeAreaView, StyleSheet, Text } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, useRoute } from "@react-navigation/native";
 import LogIn from "./components/Landing/LogIn";
 import SignUp from "./components/Landing/SignUp";
 import { AuthProvider, useAuth } from "./AuthContext";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 import AdminLandListings from "./components/Admin/AdminLandListings";
-
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -110,7 +110,7 @@ const ProfileStack = () => {
       <Stack.Screen
         name="Emergency Contacts"
         component={EmergencyContactsPage}
-        options={{ title: "Emergency Contacts" }}
+        options={{ title: "Notifications" }}
       />
     </Stack.Navigator>
   );
@@ -178,29 +178,38 @@ const App = () => {
 };
 
 const MainApp = () => {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
 
   return (
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: 'green',
+          backgroundColor: "green",
         },
-        headerTintColor: 'white',
+        headerTintColor: "white",
       }}
     >
       {role ? (
-        <Stack.Screen name="Main" component={MainTabs} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Main"
+          component={MainTabs}
+          options={{ headerShown: false }}
+        />
       ) : (
-        <Stack.Screen name="Landing" component={LandingStack} options={{ headerShown: false }} />
+        <Stack.Screen
+          name="Landing"
+          component={LandingStack}
+          options={{ headerShown: false }}
+        />
       )}
+      
     </Stack.Navigator>
   );
 };
 
-
 const MainTabs = () => {
-  const {role} = useAuth()
+  const route = useRoute();
+  const { role } = useAuth();
   return (
     <Tab.Navigator>
       <Tab.Screen
@@ -246,22 +255,28 @@ const MainTabs = () => {
           ),
         }}
       />
-      {role && role==='admin'? (<Tab.Screen
-        name="AdminStack"
-        component={AdminStack}
-        options={{
-          headerShown: false,
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="shield-checkmark-outline" color={"green"} size={size} />
-          ),
-        }}
-      />): null}
+      {role && role === "admin" ? (
+        <Tab.Screen
+          name="AdminStack"
+          component={AdminStack}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons
+                name="shield-checkmark-outline"
+                color={"green"}
+                size={size}
+              />
+            ),
+          }}
+        />
+      ) : null}
     </Tab.Navigator>
   );
 };
 
 const AdminStack = () => {
-  return(
+  return (
     <Stack.Navigator>
       <Stack.Screen
         name="AdminHome"
@@ -280,10 +295,15 @@ const AdminStack = () => {
         component={AdminLandReport}
         options={{ title: "Admin Land Report" }}
       />
+      <Stack.Screen
+        name="AdminAllUsers"
+        component={AdminAllUsers}
+        options={{title: "All Users"}}
+      />
     </Stack.Navigator>
-  )
-}
- 
+  );
+};
+
 export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,

@@ -1,6 +1,27 @@
 const mssql = require("mssql");
 const config = require("../config/userConfig");
 
+
+async function getUserDetails(req, res) {
+  try {
+    let sql = await mssql.connect(config);
+    const user = req.body
+    if (sql.connected) {
+      let request = new mssql.Request(sql);
+      request.input("UserID", user.UserID);
+      let results = await request.execute("dbo.getUserDetails");
+      res.json({
+        success: true,
+        message: "User details sent successfully",
+        results: results.recordsets[0],
+      });
+    }
+  } catch (error) {
+    console.error("Error accessing user account :", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 async function ViewProfile(req, res) {
   try {
     let sql = await mssql.connect(config);
@@ -68,10 +89,9 @@ async function ViewNotifications(req, res) {
   try {
     let sql = await mssql.connect(config);
     let user = req.body;
-    const userID = req.decodedToken.userID;
     if (sql.connected) {
       let request = new mssql.Request(sql);
-      request.input("UserID", userID);
+      request.input("UserID", user.UserID);
       let results = await request.execute("dbo.ViewNotifications");
       res.json({
         success: true,
@@ -84,6 +104,7 @@ async function ViewNotifications(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
 async function CreateProfile(req, res) {
   try {
     let sql = await mssql.connect(config);
@@ -110,6 +131,7 @@ async function CreateProfile(req, res) {
   }
 }
 module.exports = {
+  getUserDetails,
   EditUsername,
   ViewProfile,
   DeleteAccount,

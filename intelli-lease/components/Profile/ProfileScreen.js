@@ -1,15 +1,116 @@
+import React, { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AntDesign } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { useAuth } from "../../AuthContext";
+import { ActivityIndicator } from "react-native-paper";
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen() {
+  const navigation = useNavigation();
+  const { login } = useAuth()
+
+  const [userData, setUserData] = useState({
+    FirstName: "",
+    LastName: "",
+    UserEmail: "",
+    UserID: "",
+    Token: "",
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("UserID");
+        const token = await AsyncStorage.getItem("token");
+        const firstName = await AsyncStorage.getItem("FirstName");
+        const lastName = await AsyncStorage.getItem("LastName");
+        const userEmail = await AsyncStorage.getItem("UserEmail");
+
+        setUserData({
+          FirstName: firstName || "",
+          LastName: lastName || "",
+          UserEmail: userEmail || "",
+          UserID: userId || "",
+          Token: token || "",
+        });
+      } catch (error) {
+        console.error(
+          "Error retrieving user data from AsyncStorage:",
+          error.message
+        );
+      }finally{
+        setLoading(false)
+      }
+    };
+
+    getUserData();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const logoutData =
+        userData.UserID.length > 0
+          ? JSON.stringify({ UserID: userData.UserID, token: userData.Token })
+          : "{}";
+
+      const response = await fetch("http://172.28.144.1:5001/user/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: logoutData,
+      });
+
+      if (!response.ok) {
+        console.error("Error logging out:", response.status);
+        return;
+      }
+
+
+
+      Alert.alert(
+        "You are about to log out.",
+        "Are you sure you'd like to continue?",
+        [
+          {
+            text: "Cancel",
+            style: "cancel",
+          },
+          {
+            text: "Ok",
+            style: "default",
+            onPress: () => {
+              login(false)
+              navigation.navigate("Landing");
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Error logging out:", error.message);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.mainContainer, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="green" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView>
       <View style={[styles.mainContainer]}>
@@ -23,16 +124,16 @@ export default function ProfileScreen({ navigation }) {
                   { fontWeight: "bold", fontSize: 22, marginBottom: 4 },
                 ]}
               >
-                Username
+                {userData.FirstName}
               </Text>
               <Text style={[styles.name, { fontSize: 16, marginTop: -1 }]}>
-                @userhandle
+                {userData.UserEmail}
               </Text>
             </View>
             <TouchableOpacity>
               <Ionicons
                 name="pencil"
-                style={[styles.icon]}
+                style={{display:"none"}}
                 onPress={() => navigation.push("Edit Profile")}
               />
             </TouchableOpacity>
@@ -79,11 +180,14 @@ export default function ProfileScreen({ navigation }) {
                   style={[styles.icon, { color: "#000", fontSize: 22 }]}
                 />
                 <View style={[styles.detail]}>
-                  <Text onPress={() => navigation.push("Emergency Contacts")} style={[styles.tags, { marginLeft: -55 }]}>
+                  <Text
+                    onPress={() => navigation.push("Emergency Contacts")}
+                    style={[styles.tags, { marginLeft: -55 }]}
+                  >
                     My Notifications
                   </Text>
                   <Text style={[styles.tag, { marginLeft: -53 }]}>
-                      App notifications viewing 
+                    App notifications viewing
                   </Text>
                 </View>
                 <Ionicons
@@ -105,7 +209,7 @@ export default function ProfileScreen({ navigation }) {
                 />
                 <View style={[styles.detail]}>
                   <Text
-                    onPress={() => alert("You are about to log out!")}
+                    onPress={handleLogout}
                     style={[styles.tags, { marginLeft: -95 }]}
                   >
                     Log out
@@ -191,6 +295,10 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   mainContainer: {
     backgroundColor: "#F5F5F5",
     width: "100%",
@@ -202,7 +310,7 @@ const styles = StyleSheet.create({
     gap: 62,
     width: "95%",
     height: 130,
-    marginTop: '8%',
+    marginTop: "8%",
     margin: 12,
     padding: 18,
     justifyContent: "space-between",

@@ -71,7 +71,7 @@ const cors = require("cors");
 const express = require("express");
 const sql = require("mssql");
 const config = require("./src/config/userConfig");
-const userRoutes = require("./src/routers/userRoutes");
+const userRoutes = require("../Auth/src/routers/userRoutes");
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 const ejs = require("ejs");
@@ -122,7 +122,7 @@ async function startApp(pool) {
       res.send("Intelli Lease");
     });
 
-    app.use("/", userRoutes);
+    app.use('/', userRoutes);
 
     app.get("/protected", (req, res) => {
       res.send("Hello!");

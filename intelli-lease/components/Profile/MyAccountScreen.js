@@ -1,28 +1,57 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import profileImage from "../../assets/icon.png";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const MyAccountScreen = () => {
+  const [accountDetails, setAccountDetails] = useState({
+    FirstName: "",
+    LastName: "",
+    UserEmail: ""
+  });
+
+  const getInfoFromStorage = async () => {
+    try {
+      const FirstName = await AsyncStorage.getItem("FirstName");
+      const LastName = await AsyncStorage.getItem("LastName");
+      const UserEmail = await AsyncStorage.getItem("UserEmail");
+
+      setAccountDetails({
+        FirstName: FirstName || "",
+        LastName: LastName || "",
+        UserEmail: UserEmail || ""
+      });
+    } catch (error) {
+      console.error("Error retrieving user info from AsyncStorage:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    getInfoFromStorage();
+  }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.profileContainer}>
         <Image source={profileImage} style={styles.profileImage} />
-        <Text style={[styles.userName, {color: "green"}]}>UserName</Text>
-        <Text style={styles.userEmail}>User Email</Text>
+        <Text style={[styles.userName, { color: "green" }]}>IntelliLease</Text>
       </View>
-
       <View style={styles.infoContainer}>
         <View style={styles.infoRow}>
-          <Text style={[styles.infoLabel]}>Username:</Text>
-          <Text style={styles.infoValue}>johndoe522</Text>
+          <Text style={styles.infoLabel}>First Name</Text>
+          <Text style={styles.infoValue}>{accountDetails.FirstName}</Text>
         </View>
+      </View>
+      <View style={styles.infoContainer}>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Phone:</Text>
-          <Text style={styles.infoValue}>0705567826</Text>
+          <Text style={styles.infoLabel}>Last Name</Text>
+          <Text style={styles.infoValue}>{accountDetails.LastName}</Text>
         </View>
+      </View>
+      <View style={styles.infoContainer}>
         <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Address:</Text>
-          <Text style={styles.infoValue}>0013745 Kismayu</Text>
+          <Text style={styles.infoLabel}>User Email</Text>
+          <Text style={styles.infoValue}>{accountDetails.UserEmail}</Text>
         </View>
       </View>
     </View>
@@ -56,7 +85,7 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     marginTop: 20,
-    marginBottom: 30,
+    // marginBottom: 30,
     width: "100%",
   },
   infoRow: {

@@ -4,20 +4,45 @@ import pickle
 import numpy as np
 
 app = Flask(__name__)
-CORS(app)  
+CORS(app)
 
+# Load the trained model
 with open('NBClassifier.pkl', 'rb') as file:
     model = pickle.load(file)
+
 
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json()
     features = data['features']
 
-    input_data = np.array([features])
-    prediction = model.predict(input_data)
+    features = list(features.values())
 
-    return jsonify({'prediction': prediction.tolist()})
+    input_data = np.array([features], dtype=float)
+
+    predicted_proba = model.predict_proba(input_data)
+
+    class_labels = model.classes_
+
+    predicted_class_index = np.argmax(predicted_proba)
+
+    predicted_class = class_labels[predicted_class_index]
+    predicted_probability = predicted_proba[0][predicted_class_index]
+
+    # Prepare response
+    response = {
+        'predicted_class': predicted_class,
+        'probability': float(predicted_probability),
+        'other_classes': {}
+    }
+
+    # Add probabilities of other classes
+    for i, class_label in enumerate(class_labels):
+        if i != predicted_class_index:
+            response['other_classes'][class_label] = float(predicted_proba[0][i])
+
+    return jsonify(response)
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)

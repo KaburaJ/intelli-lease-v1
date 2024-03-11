@@ -6,6 +6,7 @@ const {
   DeleteAccount,
   ViewNotifications,
   CreateProfile,
+  getUserDetails,
 } = require("../controllers/UserDetails");
 const {
   addLandLeasingDetails,
@@ -13,6 +14,8 @@ const {
   UpdateLandSizeDetails,
   UserViewPendingLeaseRequests,
   UserViewApprovedLeaseRequests,
+  UserViewApprovedLeaseRequestsByCounty,
+  LeaseLand,
 } = require("../controllers/LeasingDetails");
 const {
   ApproveUpdatedLandSizeDetails,
@@ -20,6 +23,8 @@ const {
   ApproveLeaseRequest,
   ViewAdminNotifications,
   ViewPendingLeaseRequests,
+  DeclineLeaseRequest,
+  ViewAllUsers,
 } = require("../controllers/AdminDetails");
 const userMiddleware = require("../middlewares/userMiddlewares");
 const { log } = require("console");
@@ -29,17 +34,21 @@ logicRoutes.post('/edit-username', EditUsername)
 logicRoutes.post('/create-profile', CreateProfile)
 logicRoutes.post('/view-profile', ViewProfile)
 logicRoutes.get('/delete-account', DeleteAccount)
-logicRoutes.get('/view-notifications', ViewNotifications)
+logicRoutes.post('/view-notifications', ViewNotifications)
 logicRoutes.get('/view-admin-notifications', ViewAdminNotifications)
 logicRoutes.post('/add-land-leasing-details', addLandLeasingDetails)
 logicRoutes.post('/withdraw-land-leasing-details', withdrawLandLeasingDetails)
 logicRoutes.post('/update-land-size-details', UpdateLandSizeDetails)
-logicRoutes.get('/user-view-pending-lease-requests', UserViewPendingLeaseRequests)
-logicRoutes.get('/user-view-approved-lease-requests', UserViewApprovedLeaseRequests)
-logicRoutes.post('/approve-updated-land-size-details', ApproveUpdatedLandSizeDetails)
+logicRoutes.post('/user-view-pending-lease-requests', UserViewPendingLeaseRequests)
+logicRoutes.post('/user-view-approved-lease-requests', UserViewApprovedLeaseRequests)
+logicRoutes.post('/user-view-approved-lease-requests-by-county', UserViewApprovedLeaseRequestsByCounty)
 logicRoutes.post('/approve-withdraw-lease-request', ApproveWithdrawLeaseRequest)
 logicRoutes.post('/approve-lease-request', ApproveLeaseRequest)
+logicRoutes.post('/decline-lease-request', DeclineLeaseRequest)
 logicRoutes.post('/view-pending-lease-requests', ViewPendingLeaseRequests)
+logicRoutes.post('/lease-land', LeaseLand)
+logicRoutes.post('/getUserDetails', getUserDetails)
+logicRoutes.get('/all-users', ViewAllUsers)
 
 
 module.exports = logicRoutes;

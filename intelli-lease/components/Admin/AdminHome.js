@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import homeImg from "../../assets/admin1.png";
+import homeImg from "../../assets/admin.png";
 import { Image } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 
@@ -16,8 +16,8 @@ export default function AdminHome() {
               <Image
                 source={homeImg}
                 style={{
-                  width: 450,
-                  height: 450,
+                  width: 350,
+                  height: 350,
                   alignItems: "center",
                   marginBottom: "4%",
                   resizeMode: "cover",
@@ -28,11 +28,10 @@ export default function AdminHome() {
       <Text style={styles.title}>Land Leasing Admin Dashboard</Text>
 
       <TouchableOpacity style={styles.button} onPress={handleLandListings}>
-        <Text style={styles.buttonText} >View Land Listings</Text>
+        <Text style={styles.buttonText} >Pending Land Listings</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("AdminLandReport")}>
-        <Text style={styles.buttonText}>Generate Reports</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("AdminAllUsers")}>
+        <Text style={styles.buttonText}>View Users</Text>
       </TouchableOpacity>
     </View>
   );

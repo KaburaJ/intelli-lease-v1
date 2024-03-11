@@ -25,7 +25,7 @@ export default function Predictions() {
   const [selectedText, setSelectedText] = useState("History");
 
   const handleHistoryClick = () => {
-    setSelectedText("Hostory");
+    setSelectedText("History");
     setIsHistoryClicked(true);
     setIsInfoClicked(false);
     setIsSummaryClicked(false);
@@ -90,11 +90,11 @@ export default function Predictions() {
           </Text>
           <View style={styles.subTextRow}>
             {[
-              {
-                text: "History",
-                onPress: handleHistoryClick,
-                marginTop: "3.5%",
-              },
+              // {
+              //   text: "History",
+              //   onPress: handleHistoryClick,
+              //   marginTop: "3.5%",
+              // },
               {
                 text: "Summary",
                 onPress: handleSummaryClick,

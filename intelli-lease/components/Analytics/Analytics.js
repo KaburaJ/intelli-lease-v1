@@ -1,6 +1,6 @@
 import { useRoute } from "@react-navigation/native";
 import React, { useState, useEffect, useRef } from "react";
-import { StatusBar, Dimensions, SafeAreaView } from "react-native";
+import { StatusBar, Dimensions, SafeAreaView, Alert } from "react-native";
 import { ScrollView, StyleSheet, Text, View, Image } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import MapView, { Marker, Polygon } from "react-native-maps";
@@ -11,6 +11,8 @@ import logo from "../../assets/app-logo.png";
 import Slider from "@react-native-community/slider";
 import pieChartImage from "../../assets/pie_chart_image.png";
 import axios from "axios";
+import { ActivityIndicator } from "react-native-paper";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Analytics() {
   const [polygons, setPolygons] = useState([]);
@@ -22,7 +24,8 @@ export default function Analytics() {
   const [selectedCrop, setSelectedCrop] = useState(null);
   const [threshold, setThreshold] = useState(10);
   const [weatherData, setWeatherData] = useState(null);
-  const [prediction, setPrediction] = useState(null);
+  const [prediction, setPrediction] = useState({});
+  const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     N: 0,
     P: 0,
@@ -33,15 +36,61 @@ export default function Analytics() {
     rainfall: 0,
   });
 
+  const [formFilled, setFormFilled] = useState(false);
+
+  // Function to check if all form fields are filled
+  const checkFormFilled = () => {
+    const { N, P, K, temperature, humidity, pH, rainfall } = form;
+    return (
+      N !== 0 &&
+      P !== 0 &&
+      K !== 0 &&
+      temperature !== 0 &&
+      humidity !== 0 &&
+      pH !== 0 &&
+      rainfall >= 0
+    );
+  };
+
+  // useEffect to check if all form fields are filled
+  useEffect(() => {
+    setFormFilled(checkFormFilled());
+  }, [form]);
+
   const handlePredict = async () => {
+    console.log("form: ", form);
     try {
+      // Convert form data to features format
+      const features = {
+        K: parseFloat(form.K),
+        N: parseFloat(form.N),
+        P: parseFloat(form.P),
+        humidity: parseFloat(form.humidity),
+        pH: parseFloat(form.pH),
+        rainfall: parseFloat(form.rainfall),
+        temperature: parseFloat(form.temperature),
+      };
+
       const response = await axios.post(
-        "http://127.0.0.1:5000/predict",
-        { features: Object.values(form) },
+        "http://192.168.0.106:5000/predict",
+        { features: features },
         { withCredentials: true }
       );
-      console.log(response.data.prediction[0]);
-      setPrediction(response.data.prediction[0]);
+
+      console.log("predict: ", response.data);
+      setPrediction(response.data);
+      const countyPrediction = {
+        county: place,
+        prediction: response.data,
+      };
+      await AsyncStorage.setItem(
+        "countyPrediction",
+        JSON.stringify(countyPrediction)
+      );
+
+      if (response.data.probability === 0) {
+        Alert.alert("Warning", "This crop might not do well in this area");
+      }
     } catch (error) {
       console.error("Error predicting:", error);
     }
@@ -88,6 +137,7 @@ export default function Analytics() {
       };
 
       mapViewRef.current.animateToRegion(newRegion, 1000);
+      // setLoading(false);
     }
   };
 
@@ -401,36 +451,44 @@ export default function Analytics() {
   const getClimateData = async () => {
     try {
       const res = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,rain`,
+        `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,relative_humidity_2m,precipitation,rain&daily=rain_sum,showers_sum`,
         { withCredentials: true }
       );
       const data = res.data;
       setWeatherData(data);
-      // setForm((prevForm) => ({
-      //   ...prevForm,
-      //   temperature: weatherData.hourly.temperature_2m[0],
-      // }));
-      // setForm((prevForm) => ({
-      //   ...prevForm,
-      //   humidity: weatherData.hourly.relative_humidity_2m[0],
-      // }));
-      // setForm((prevForm) => ({
-      //   ...prevForm,
-      //   rainfall: weatherData.hourly.rain[0],
-      // }));
-    } catch (error) {}
+      if (data && data.hourly) {
+        const precipitationArray = data.hourly.precipitation;
+        const averagePrecipitation =
+          precipitationArray.reduce((acc, val) => acc + val, 0) /
+          precipitationArray.length;
+        setForm((prevForm) => ({
+          ...prevForm,
+          temperature: data.hourly.temperature_2m[data.hourly.time.length - 2],
+          humidity:
+            data.hourly.relative_humidity_2m[data.hourly.time.length - 2],
+          rainfall: averagePrecipitation * 10000,
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+    }
   };
 
-  if(longitude && latitude){
+  if (longitude && latitude) {
+    useEffect(() => {
+      getClimateData();
+      getPhosphorousData();
+      getPotassiumData();
+      getNitrogenData();
+      getPHData();
+    }, [longitude, latitude]);
+  }
+
   useEffect(() => {
-    getPhosphorousData();
-    getPotassiumData();
-    getNitrogenData();
-    getPHData();
-    getClimateData();
-    // handlePredict()
-  }, [longitude, latitude]);
-}
+    if (formFilled) {
+      handlePredict();
+    }
+  }, [formFilled]);
 
   // if (weatherData) {
   //   setForm((prevForm) => ({
@@ -458,13 +516,13 @@ export default function Analytics() {
     const temperatureData = weatherData.hourly.temperature_2m.map(Number);
     const humidityDataA = weatherData.hourly.relative_humidity_2m.map(Number);
     const rainfallDataA = weatherData.hourly.rain.map(Number);
-    lineChart = (
+    const lineChart = (
       <View>
         <Text style={styles.subTextSmall}>Temperature Line Chart</Text>
         <LineChart
           data={{
-            labels: labelsA,
-            datasets: [{ data: temperatureData, strokeWidth: 2 }],
+            labels: weatherData.hourly.time,
+            datasets: [{ data: weatherData.hourly.temperature_2m }],
           }}
           width={460}
           height={320}
@@ -509,7 +567,6 @@ export default function Analytics() {
       </View>
     );
   }
-
   return (
     <ScrollView style={styles.scrollView}>
       <View style={styles.container}>
@@ -594,69 +651,74 @@ export default function Analytics() {
             />
           )}
         </MapView>
-        <View></View>
-        <Image source={pieChartImage} style={styles.image}></Image>
-        {/* <Text style={styles.subTextSmall}>{lineChartTitle}</Text> */}
-        {/* <View>
-          <LineChart
-            data={{
-              labels: line.labels,
-              datasets: [
-                {
-                  data: line.datasets[0].data,
-                  strokeWidth: 2,
-                },
-              ],
-            }}
-            width={Dimensions.get("window").width * 0.96}
-            height={420}
-            yAxisLabel={"$"}
-            chartConfig={{
-              backgroundColor: "fb8c00",
-              backgroundGradientFrom: "green",
-              backgroundGradientTo: "#71f075",
-              decimalPlaces: 2,
-              color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
-                borderRadius: 15,
-              },
-            }}
-            bezier
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-              marginLeft: 10,
-            }}
+        <Text style={styles.subText}>Land Characteristics</Text>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>Phosphorous:</Text>
+            <Text>{form.K}</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>Nitrogen:</Text>
+            <Text>{form.N}</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>Potassium:</Text>
+            <Text>{form.P}</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>Humidity:</Text>
+            <Text>{form.humidity}</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>pH:</Text>
+            <Text>{form.pH}</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>Rainfall:</Text>
+            <Text>{form.rainfall}</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>Temperature:</Text>
+            <Text>{form.temperature}</Text>
+          </View>
+        </View>
+        <View style={styles.card}>
+          <View style={styles.cardItem}>
+            <Text style={styles.label}>Prediction:</Text>
+            <Text>
+              {prediction.predicted_class || "Prediction unavailable"}
+            </Text>
+          </View>
+        </View>
+        {/* <View style={styles.sliderContainer}>
+          <Text style={styles.label}>Probability of Growing:</Text>
+          <Slider
+            style={{ width: "80%", height: 40 }}
+            minimumValue={0}
+            maximumValue={1}
+            value={prediction.probability || 0}
+            minimumTrackTintColor="#FF5733"
+            maximumTrackTintColor="#000000"
+            thumbTintColor="#FF5733"
+            disabled={!prediction.probability}
           />
         </View> */}
-        {/* {selectedCrop && (
-          <>
-            <Slider
-              style={{ width: "90%", alignSelf: "center", marginVertical: 10 }}
-              minimumValue={1}
-              maximumValue={filteredData.length}
-              value={threshold}
-              step={10}
-              onValueChange={(value) => setThreshold(value)}
-              minimumTrackTintColor="#00ff00"
-              maximumTrackTintColor="#000000"
-            />
 
-            <View
-              style={{
-                alignSelf: "center",
-                marginVertical: 10,
-                width: "90%",
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
-              <Text>1</Text>
-              <Text>{threshold}</Text>
-              <Text>{filteredData.length}</Text>
-            </View>
-          </>
-        )} */}
+        {/* {prediction.probability === 0 &&
+          Alert.alert("This crop might not do well in this area")} */}
+
         {longitude && latitude && weatherData ? (
           <View>
             {lineChart}
@@ -882,6 +944,10 @@ const chartConfig = {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   scrollView: {
     flex: 1,
   },
@@ -966,6 +1032,25 @@ const styles = StyleSheet.create({
     height: 350,
     resizeMode: "cover",
     marginLeft: 5,
-    marginRight:5
+    marginRight: 5,
+  },
+  card: {
+    backgroundColor: "green",
+    color: "white",
+    borderRadius: 10,
+    padding: 10,
+    marginLeft: 15,
+    marginRight: 15,
+    marginBottom: 15,
+  },
+  cardItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    color: "white",
+  },
+  label: {
+    fontWeight: "bold",
+    color: "white",
   },
 });

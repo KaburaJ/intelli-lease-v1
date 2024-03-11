@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 
-export default function SignUp() {
+const SignUp = () => {
   const navigation = useNavigation();
 
   const [form, setForm] = useState({
@@ -23,148 +23,136 @@ export default function SignUp() {
 
   const handleSignUp = async () => {
     try {
-      if(form.FirstName && form.LastName && form.UserEmail && form.UserPasswordHash && form.UserCPassword ){
+      if (!form.FirstName || !form.LastName || !form.UserEmail || !form.UserPasswordHash || !form.UserCPassword) {
+        Alert.alert("Please fill all required fields");
+        return;
+      }
+  
       if (form.UserPasswordHash !== form.UserCPassword) {
         Alert.alert("Passwords do not match");
         return;
       }
-
-      console.log(form);
   
-      const response = await fetch("http://192.168.1.56:5000/user/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(form),
-    });
-
-    const responseData = await response.json();
-
-    console.log("FORM", form);
-    console.log("RESPONSE", responseData);
-
-    if (!response.ok) {
-      console.error("Error signing up:", responseData);
-      return;
+      const response = await fetch("http://172.22.240.1:5001/user/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+  
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        console.error("Error signing up:", errorMessage);
+        return;
+      }
+  
+      const responseData = await response.json();
+      const userData = responseData[0];
+  
+      Alert.alert("Sign up successful", "Login?", [
+        {
+          text: "OK",
+          onPress: () =>
+            navigation.navigate("LogIn", {
+              userData: userData,
+            }),
+        },
+      ]);
+    } catch (error) {
+      console.error("Error signing up:", error.message);
     }
-
-    const userData = responseData[0];
-    console.log(userData);
-
-
-    Alert.alert("Sign up successful", null, [
-      {
-        text: "OK",
-        onPress: () =>
-          navigation.navigate("LogIn", {
-            userData: userData,
-          }),
-      },
-    ]);
-  }
-  else{
-    Alert.alert("Please fill all required fields", null, [
-     {text: "OK",}
-    ])
-  }
-  } catch (error) {
-    console.error("Error signing up:", error.message);
-  }
-};
-
+  };  
 
   return (
     <SafeAreaView style={{width:'100%'}}>
-    <View style={styles.mainContainer}>
-      <View style={styles.header}>
-        <Text style={styles.subtitle}>Sign up to an account</Text>
+      <View style={styles.mainContainer}>
+        <View style={styles.header}>
+          <Text style={styles.subtitle}>Sign up to an account</Text>
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>First Name</Text>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="default"
+              onChangeText={(FirstName) => setForm({ ...form, FirstName })}
+              placeholder="john"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              value={form.FirstName}
+            />
+          </View>
+
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Last Name</Text>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="default"
+              onChangeText={(LastName) => setForm({ ...form, LastName })}
+              placeholder="doe"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              value={form.LastName}
+            />
+          </View>
+
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Email address</Text>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              onChangeText={(UserEmail) => setForm({ ...form, UserEmail })}
+              placeholder="john@example.com"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              value={form.UserEmail}
+            />
+          </View>
+
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <TextInput
+              autoCorrect={false}
+              onChangeText={(UserPasswordHash) =>
+                setForm({ ...form, UserPasswordHash })
+              }
+              placeholder="********"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              secureTextEntry={true}
+              value={form.UserPasswordHash}
+            />
+          </View>
+
+          <View style={[styles.input, { marginBottom: "-1em" }]}>
+            <Text style={styles.inputLabel}>Confirm Password</Text>
+            <TextInput
+              autoCorrect={false}
+              onChangeText={(UserCPassword) =>
+                setForm({ ...form, UserCPassword })
+              }
+              placeholder="********"
+              placeholderTextColor="#6b7280"
+              style={styles.inputControl}
+              secureTextEntry={true}
+              value={form.UserCPassword}
+            />
+          </View>
+
+          <View style={styles.formAction}>
+            <TouchableOpacity onPress={handleSignUp}>
+              <View style={styles.btn}>
+                <Text style={styles.btnText}>Sign Up</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
-
-      <View style={styles.form}>
-        <View style={styles.input}>
-          <Text style={styles.inputLabel}>First Name</Text>
-
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="default"
-            onChangeText={(FirstName) => setForm({ ...form, FirstName })}
-            placeholder="john"
-            placeholderTextColor="#6b7280"
-            style={styles.inputControl}
-            value={form.FirstName}
-          />
-        </View>
-        <View style={styles.input}>
-          <Text style={styles.inputLabel}>Last Name</Text>
-
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="default"
-            onChangeText={(LastName) => setForm({ ...form, LastName })}
-            placeholder="doe"
-            placeholderTextColor="#6b7280"
-            style={styles.inputControl}
-            value={form.LastName}
-          />
-        </View>
-        <View style={styles.input}>
-          <Text style={styles.inputLabel}>Email address</Text>
-
-          <TextInput
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            onChangeText={(UserEmail) => setForm({ ...form, UserEmail })}
-            placeholder="john@example.com"
-            placeholderTextColor="#6b7280"
-            style={styles.inputControl}
-            value={form.UserEmail}
-          />
-        </View>
-
-        <View style={styles.input}>
-          <Text style={styles.inputLabel}>Password</Text>
-
-          <TextInput
-            autoCorrect={false}
-            onChangeText={(UserPasswordHash) =>
-              setForm({ ...form, UserPasswordHash })
-            }
-            placeholder="********"
-            placeholderTextColor="#6b7280"
-            style={styles.inputControl}
-            secureTextEntry={true}
-            value={form.UserPasswordHash}
-          />
-        </View>
-        <View style={[styles.input, { marginBottom: "-1em" }]}>
-          <Text style={styles.inputLabel}>Confirm Password</Text>
-
-          <TextInput
-            autoCorrect={false}
-            onChangeText={(UserCPassword) =>
-              setForm({ ...form, UserCPassword })
-            }
-            placeholder="********"
-            placeholderTextColor="#6b7280"
-            style={styles.inputControl}
-            secureTextEntry={true}
-            value={form.UserCPassword}
-          />
-        </View>
-
-        <View style={styles.formAction}>
-          <TouchableOpacity onPress={handleSignUp}>
-            <View style={styles.btn}>
-              <Text style={styles.btnText}>Sign Up</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
     </SafeAreaView>
   );
 }
@@ -180,7 +168,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexBasis: 0,
   },
-
   logo: {
     marginLeft: "5%",
     marginTop: "14%",
@@ -252,3 +239,5 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 });
+
+export default SignUp

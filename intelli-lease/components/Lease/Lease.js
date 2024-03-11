@@ -9,61 +9,69 @@ import {
   ScrollView,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import DropDownPicker from "react-native-dropdown-picker";
 import { Picker } from "@react-native-picker/picker";
-import countyData from "../../assets/ke.json";
+import countyData from "../../assets/Kenya_counties_subcounties_constituencies_wards.json";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ActivityIndicator } from "react-native-paper";
 
 const LeaseLandPage = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  console.log(route);
-  const { UserEmail } = route.params && route.params[0] ? route.params[0] : {UserEmail:'kk@gmail.com'};
-  console.log(UserEmail);
-  const [userData, setUserData] = useState({});
 
-  const [details, setDetails] = useState({
-    UserID: userData.UserID,
-    County: "",
-    SubCounty: "",
-    Constituency: "",
-    LandSize: 0
+  const[loading, setLoading] = useState(true)
+  const [userData, setUserData] = useState({
+    FirstName: "",
+    LastName: "",
+    UserEmail: "",
   });
 
-  const getUserDetails = async () => {
-    try {
-      const response = await fetch(
-        "https://intelli-lease-land-details.onrender.com/userdetails",
-        {
-          method: "GET",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          // body: JSON.stringify({ UserEmail: UserEmail }),
-        }
-      );
-      
-      const data = await response.json()
-      console.log(data);
-      const result = await response.json();      
-      if (!response.ok) {
-        console.error("Error getting user details:", response.status);
-        return;
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("UserID");
+        const token = await AsyncStorage.getItem("token");
+        const firstName = await AsyncStorage.getItem("FirstName");
+        const lastName = await AsyncStorage.getItem("LastName");
+        const userEmail = await AsyncStorage.getItem("UserEmail");
+
+
+        setUserData({
+          FirstName: firstName || "",
+          LastName: lastName || "",
+          UserEmail: userEmail || "",
+        });
+
+        setDetails({ ...details, UserID: userId });
+        setDetails((prevDetails) => ({ ...prevDetails, token: token }));
+
+      } catch (error) {
+        console.error("Error retrieving user data from AsyncStorage:", error.message);
+      }finally{
+        setLoading(false)
       }
-    } catch (error) {
-      console.error("Error getting user details:", error.message);
-    }
-  };
+    };
 
-useEffect(() => {
-  getUserDetails()
-}, [])
+    getUserData();
+  }, []);
 
+  const [tempDetails, setTempDetails] = useState({
+    CountyName: "",
+    SubCountyName: ""
+  });
+
+  const [details, setDetails] = useState({
+    UserID: "",
+    CountyName: "",
+    SubCountyName: "",
+    ConstituencyName: "",
+    LandSize: 0,
+    token: ""
+  });
 
   const handleLease = async () => {
     try {
       const response = await fetch(
-        "https://intelli-lease-land-details.onrender.com/lease-out",
+        "http://172.22.240.1:5002/add-land-leasing-details",
         {
           method: "POST",
           credentials: "include",
@@ -74,23 +82,48 @@ useEffect(() => {
         }
       );
       if (!response.ok) {
-        console.error("Error signing up:", response.status);
+        console.error("Error Putting Your Land Up for Lease:", response.status);
         return;
       }
 
       Alert.alert(
         "Your land is up for lease pending approval. We shall get back to you.",
         null,
-        [{ text: "OK", onPress: () => navigation.navigate("Home") }]
+        [{ text: "OK", onPress: () => navigation.navigate("WelcomeUserHome") }]
       );
     } catch (error) {
-      console.error("Error signing up:", error.message);
+      console.error("Error Putting Your Land Up for Lease:", error.message);
     }
   };
 
-  const uniqueCountyClasses = Array.from(
-    new Set(countyData.map((item) => item.admin_name))
-  );
+  const handleCountyChange = (county) => {
+    // console.log("county", county);
+    setTempDetails({ ...tempDetails, CountyName: county });
+    setDetails({ ...details, CountyName: county.county_name });
+
+  };
+
+  const handleConstituencyChange = (constituency) => {
+    // console.log("constituency", constituency);
+    setTempDetails({ ...tempDetails, SubCountyName: constituency });
+    setDetails({ ...details, SubCountyName: constituency.constituency_name });
+  };
+
+  const handleWardChange = (ward) => {
+    // console.log("ward", ward);
+    setDetails({ ...details, ConstituencyName: ward });
+  };
+
+  console.log("details: ", details);
+
+
+  if (loading) {
+    return (
+      <View style={[styles.mainContainer, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="green" />
+      </View>
+    );
+  }
 
   return (
     <ScrollView>
@@ -107,7 +140,10 @@ useEffect(() => {
               keyboardType="default"
               placeholderTextColor="#6b7280"
               style={styles.inputControl}
-              defaultValue={userData.FirstName}
+              value={userData.FirstName}
+              onChangeText={(text) =>
+                setUserData({ ...userData, FirstName: text })
+              }
             />
           </View>
           <View style={styles.input}>
@@ -118,7 +154,10 @@ useEffect(() => {
               keyboardType="default"
               placeholderTextColor="#6b7280"
               style={styles.inputControl}
-              defaultValue={userData.LastName}
+              value={userData.LastName}
+              onChangeText={(text) =>
+                setUserData({ ...userData, LastName: text })
+              }
             />
           </View>
           <View style={[styles.input]}>
@@ -129,7 +168,8 @@ useEffect(() => {
               keyboardType="default"
               placeholderTextColor="#6b7280"
               style={styles.inputControl}
-              defaultValue={userData.UserEmail}
+              value={userData.UserEmail}
+              onChangeText={(text) => setUserData({ ...userData, UserEmail })}
             />
           </View>
 
@@ -137,57 +177,54 @@ useEffect(() => {
             Location Details
           </Text>
           <Picker
-            selectedValue={details.County}
+            selectedValue={details.CountyName}
             style={styles.inputControl}
-            onValueChange={(itemValue) =>
-              setDetails({ ...details, County: itemValue })
-            }
+            onValueChange={handleCountyChange}
           >
             <Picker.Item label="Select County" value="" />
-            {uniqueCountyClasses.map((admin_name) => (
+            {countyData[2].data.map((county) => (
               <Picker.Item
-                key={admin_name}
-                label={admin_name}
-                value={admin_name}
+                key={county.county_id}
+                label={county.county_name}
+                value={county}
                 style={styles.pickerItem}
               />
             ))}
           </Picker>
 
           <Picker
-            selectedValue={details.SubCounty}
+            selectedValue={details.SubCountyName}
             style={styles.inputControl}
-            onValueChange={(itemValue) =>
-              setDetails({ ...details, SubCounty: itemValue })
-            }
-          >
-            <Picker.Item label="Select Sub-County" value="" />
-            {uniqueCountyClasses.map((admin_name) => (
-              <Picker.Item
-                key={admin_name}
-                label={admin_name}
-                value={admin_name}
-                style={styles.pickerItem}
-              />
-            ))}
-          </Picker>
-
-          <Picker
-            selectedValue={details.Constituency}
-            style={styles.inputControl}
-            onValueChange={(itemValue) =>
-              setDetails({ ...details, Constituency: itemValue })
-            }
+            onValueChange={handleConstituencyChange}
           >
             <Picker.Item label="Select Constituency" value="" />
-            {uniqueCountyClasses.map((admin_name) => (
+            {countyData[3].data
+              .filter((constituency) => constituency.county_id === tempDetails.CountyName.county_id)
+              .map((element) =>
               <Picker.Item
-                key={admin_name}
-                label={admin_name}
-                value={admin_name}
-                style={styles.pickerItem}
-              />
-            ))}
+                    key={element.constituency_id}
+                    label={element.constituency_name}
+                    value={element}
+                    style={styles.pickerItem}
+                  />
+                )}
+          </Picker>
+          <Picker
+            selectedValue={details.ConstituencyName}
+            style={styles.inputControl}
+            onValueChange={handleWardChange}
+          >
+            <Picker.Item label="Select Ward" value="" />
+            {countyData[4].data
+              .filter((ward) => ward.subcounty_id === tempDetails.SubCountyName.subcounty_id)
+              .map((element) =>
+              <Picker.Item
+                    key={element.station_id}
+                    label={element.ward}
+                    value={element.ward}
+                    style={styles.pickerItem}
+                  />
+                )}
           </Picker>
           <Text style={[styles.inputLabel, { marginTop: 20 }]}>
             Land Details
@@ -199,12 +236,12 @@ useEffect(() => {
               autoCorrect={false}
               keyboardType="number-pad"
               onChangeText={(LandSize) =>
-                setDetails({ ...details, LandSize})
+                setDetails({ ...details, LandSize: LandSize.toString() })
               }
               placeholder="0 (ACRES)"
               placeholderTextColor="#6b7280"
               style={styles.inputControl}
-              value={details.LandSize}
+              value={details.LandSize.toString()} // Convert to string
             />
           </View>
           <View style={styles.formAction}>
@@ -221,6 +258,10 @@ useEffect(() => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
   mainContainer: {
     marginTop: 15,
     margin: 18,
