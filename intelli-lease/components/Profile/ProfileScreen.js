@@ -64,7 +64,7 @@ export default function ProfileScreen() {
           ? JSON.stringify({ UserID: userData.UserID, token: userData.Token })
           : "{}";
 
-      const response = await fetch("http://172.28.144.1:5001/user/logout", {
+      const response = await fetch("https://intelli-lease-v1.onrender.com/user/logout", {
         method: "POST",
         credentials: "include",
         headers: {

@@ -66,7 +66,7 @@ const AdminLandReport = () => {
 
   const getUserDetails = async () => {
     try {
-      const response = await fetch("http://172.28.144.1:5002/getUserDetails", {
+      const response = await fetch("https://intelli-lease-v1-1.onrender.com/getUserDetails", {
         method: "POST",
         credentials: "include",
         headers: {

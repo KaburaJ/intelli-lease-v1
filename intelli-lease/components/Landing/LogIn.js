@@ -33,7 +33,7 @@ export default function LogIn({ onSwitchToSignUp }) {
 
   const handleLogIn = async () => {
     try {
-      const response = await fetch("http://172.28.144.1:5001/user/login", {
+      const response = await fetch("https://intelli-lease-v1.onrender.com/user/login", {
         method: "POST",
         credentials: "include",
         headers: {

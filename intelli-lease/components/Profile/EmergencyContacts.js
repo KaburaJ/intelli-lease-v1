@@ -45,7 +45,7 @@ const EmergencyContactsPage = () => {
   const handleNotifications = async () => {
     try {
       const response = await fetch(
-        "http://172.28.144.1:5002/view-notifications",
+        "https://intelli-lease-v1-1.onrender.com/view-notifications",
         {
           method: "POST",
           credentials: "include",

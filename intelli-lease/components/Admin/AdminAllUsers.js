@@ -40,7 +40,7 @@ export default function AdminAllUsers() {
 
   const viewAllUsers = async () => {
     try {
-      const response = await fetch("http://172.28.144.1:5002/all-users", {
+      const response = await fetch("https://intelli-lease-v1-1.onrender.com/all-users", {
         method: "GET",
         credentials: "include",
         headers: {

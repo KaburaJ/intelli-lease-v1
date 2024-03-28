@@ -71,7 +71,7 @@ const LeaseLandPage = () => {
   const handleLease = async () => {
     try {
       const response = await fetch(
-        "http://172.22.240.1:5002/add-land-leasing-details",
+        "https://intelli-lease-v1-1.onrender.com/add-land-leasing-details",
         {
           method: "POST",
           credentials: "include",

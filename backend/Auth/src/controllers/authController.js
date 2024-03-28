@@ -126,12 +126,12 @@ module.exports = {
       if (error) {
         return res.status(400).json({ error: error.details[0].message });
       }
-
+  
       const user = req.body;
       const hashedPassword = await bcrypt.hash(user.UserPasswordHash, 8);
-
+  
       const sql = await mssql.connect(config);
-
+  
       if (sql.connected) {
         const request = new mssql.Request(sql);
         request
@@ -139,11 +139,19 @@ module.exports = {
           .input("LastName", user.LastName)
           .input("UserEmail", user.UserEmail)
           .input("UserPasswordHash", hashedPassword);
-
+  
         const results = await request.execute("dbo.AddUser");
-        res.json(results.recordset[0]);
-        console.log(results);
-
+  
+        console.log("Results:", results); // Log the results
+  
+        if (results && results.recordset && results.recordset.length > 0) {
+          res.json(results.recordset[0]);
+          console.log(results);
+        } else {
+          console.error("No results found");
+          res.status(500).send("No results found");
+        }
+  
         // const emailBody = await ejs.renderFile(
         //   path.join(__dirname, "../views/email.ejs"),
         //   { userName: user.FirstName }
@@ -155,7 +163,7 @@ module.exports = {
       res.status(500).send(`An error occurred when registering a user: ${e}`);
     }
   },
-
+  
   loginUser: async (req, res) => {
     try {
       const { error, value } = loginSchema.validate(req.body);

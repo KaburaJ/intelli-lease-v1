@@ -33,7 +33,7 @@ const SignUp = () => {
         return;
       }
   
-      const response = await fetch("http://172.22.240.1:5001/user/signup", {
+      const response = await fetch("https://intelli-lease-v1.onrender.com/user/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

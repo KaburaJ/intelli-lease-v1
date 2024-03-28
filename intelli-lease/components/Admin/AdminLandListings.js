@@ -44,7 +44,7 @@ export default function AdminLandListings() {
 
       setLoading(true)
       const response = await fetch(
-        "http://172.28.144.1:5002/view-pending-lease-requests",
+        "https://intelli-lease-v1-1.onrender.com/view-pending-lease-requests",
         {
           method: "POST",
           credentials: "include",
