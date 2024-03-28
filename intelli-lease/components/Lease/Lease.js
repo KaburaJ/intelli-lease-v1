@@ -77,6 +77,7 @@ const LeaseLandPage = () => {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
+            "x-access-token": details.token,
           },
           body: JSON.stringify(details),
         }

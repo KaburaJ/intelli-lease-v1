@@ -72,7 +72,7 @@ export default function Analytics() {
       };
 
       const response = await axios.post(
-        "http://192.168.0.106:5000/predict",
+        "http://192.168.43.228:5000/predict",
         { features: features },
         { withCredentials: true }
       );
@@ -456,23 +456,24 @@ export default function Analytics() {
       );
       const data = res.data;
       setWeatherData(data);
-      if (data && data.hourly) {
+      if (data && data.hourly && data.hourly.precipitation) {
         const precipitationArray = data.hourly.precipitation;
         const averagePrecipitation =
           precipitationArray.reduce((acc, val) => acc + val, 0) /
           precipitationArray.length;
         setForm((prevForm) => ({
           ...prevForm,
-          temperature: data.hourly.temperature_2m[data.hourly.time.length - 2],
-          humidity:
-            data.hourly.relative_humidity_2m[data.hourly.time.length - 2],
-          rainfall: averagePrecipitation * 10000,
+          temperature:
+            data.hourly.temperature_2m[data.hourly.time.length - 2],
+          humidity: data.hourly.relative_humidity_2m[data.hourly.time.length - 2],
+          rainfall: averagePrecipitation * 10000, // Convert to mm
         }));
       }
     } catch (error) {
       console.error("Error fetching weather data:", error);
     }
   };
+  
 
   if (longitude && latitude) {
     useEffect(() => {
