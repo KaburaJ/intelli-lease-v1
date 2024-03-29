@@ -37,6 +37,7 @@ def predict():
     }
 
     # Add probabilities of other classes
+        # Add probabilities of other classes
     for i, class_label in enumerate(class_labels):
         if i != predicted_class_index:
             response['other_classes'][class_label] = float(predicted_proba[0][i])
