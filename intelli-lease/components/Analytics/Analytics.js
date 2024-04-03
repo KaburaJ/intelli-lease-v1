@@ -26,6 +26,13 @@ export default function Analytics() {
   const [weatherData, setWeatherData] = useState(null);
   const [prediction, setPrediction] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadingPhosphorus, setLoadingPhosphorus] = useState(false);
+  const [loadingPotassium, setLoadingPotassium] = useState(false);
+  const [loadingPH, setLoadingPH] = useState(false);
+  const [loadingRainfall, setLoadingRainfall] = useState(false);
+  const [loadingTemperature, setLoadingTemperature] = useState(false);
+  const [loadingHumidity, setLoadingHumidity] = useState(false);
+  const [loadingNitrogen, setLoadingNitrogen] = useState(false);
   const [form, setForm] = useState({
     N: 0,
     P: 0,
@@ -72,7 +79,7 @@ export default function Analytics() {
       };
 
       const response = await axios.post(
-        "http://192.168.43.228:5000/predict",
+        "https://intelli-lease-v1-2.onrender.com/predict",
         { features: features },
         { withCredentials: true }
       );
@@ -90,18 +97,18 @@ export default function Analytics() {
 
       if (response.data.probability === 0) {
         Alert.alert("Warning", "This crop might not do well in this area");
+      } else {
+        Alert.alert(
+          "Crop Probability",
+          `Probability of growing ${selectedCrop}: ${
+            response.data.probability * 100
+          }%`
+        );
       }
     } catch (error) {
       console.error("Error predicting:", error);
     }
   };
-
-  const [pieChartTitle, setPieChartTitle] = useState(
-    "Crop classes and their distribution"
-  );
-  const [lineChartTitle, setLineChartTitle] = useState(
-    "Visual of Arable land Areas and crops grown"
-  );
   const [barTempChartTitle, setBarTempChartTitle] = useState(
     "Temperature Data Visualization for crop type"
   );
@@ -405,6 +412,8 @@ export default function Analytics() {
       setForm((prevForm) => ({ ...prevForm, P: phosphorousValue }));
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoadingPhosphorus(false); // Set loading state back to false
     }
   };
   const getPotassiumData = async () => {
@@ -419,6 +428,8 @@ export default function Analytics() {
       setForm((prevForm) => ({ ...prevForm, K: potassiumValue }));
     } catch (error) {
       console.log(error);
+    }finally {
+      setLoadingPotassium(false); 
     }
   };
   const getNitrogenData = async () => {
@@ -432,6 +443,8 @@ export default function Analytics() {
       setForm((prevForm) => ({ ...prevForm, N: nitrogenValue }));
     } catch (error) {
       console.log(error);
+    }finally {
+      setLoadingNitrogen(false); 
     }
   };
   const getPHData = async () => {
@@ -445,6 +458,8 @@ export default function Analytics() {
       setForm((prevForm) => ({ ...prevForm, pH: phValue }));
     } catch (error) {
       console.log(error);
+    }finally {
+      setLoadingPH(false); 
     }
   };
 
@@ -463,17 +478,20 @@ export default function Analytics() {
           precipitationArray.length;
         setForm((prevForm) => ({
           ...prevForm,
-          temperature:
-            data.hourly.temperature_2m[data.hourly.time.length - 2],
-          humidity: data.hourly.relative_humidity_2m[data.hourly.time.length - 2],
+          temperature: data.hourly.temperature_2m[data.hourly.time.length - 2],
+          humidity:
+            data.hourly.relative_humidity_2m[data.hourly.time.length - 2],
           rainfall: averagePrecipitation * 10000, // Convert to mm
         }));
       }
     } catch (error) {
       console.error("Error fetching weather data:", error);
+    }finally {
+      setLoadingTemperature(false); 
+      setLoadingHumidity(false); 
+      setLoadingRainfall(false); 
     }
   };
-  
 
   if (longitude && latitude) {
     useEffect(() => {
@@ -656,51 +674,84 @@ export default function Analytics() {
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>Phosphorous:</Text>
-            <Text>{form.K}</Text>
+            {loadingPhosphorus ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : (
+              <Text>{form.K}</Text>
+            )}
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>Nitrogen:</Text>
-            <Text>{form.N}</Text>
+            {loadingNitrogen ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : (
+              <Text>{form.N}</Text>
+            )}
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>Potassium:</Text>
-            <Text>{form.P}</Text>
+            {loadingPotassium ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : (
+              <Text>{form.P}</Text>
+            )}
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>Humidity:</Text>
-            <Text>{form.humidity}</Text>
+            {loadingHumidity ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : (
+              <Text>{form.humidity}</Text>
+            )}
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>pH:</Text>
-            <Text>{form.pH}</Text>
+            {loadingPH ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : (
+              <Text>{form.pH}</Text>
+            )}
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>Rainfall:</Text>
-            <Text>{form.rainfall}</Text>
+            {loadingRainfall ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : (
+              <Text>{form.rainfall}</Text>
+            )}
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>Temperature:</Text>
-            <Text>{form.temperature}</Text>
+            {loadingTemperature ? (
+              <ActivityIndicator size="small" color="#0000ff" />
+            ) : (
+              <Text>{form.temperature}</Text>
+            )}
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
             <Text style={styles.label}>Prediction:</Text>
-            <Text>
-              {prediction.predicted_class || "Prediction unavailable"}
-            </Text>
+            {prediction.predicted_class ? (
+              <>
+                <Text>{prediction.predicted_class}</Text>
+                <Text>Probability: {prediction.probability}</Text>
+              </>
+            ) : (
+              <ActivityIndicator size="small" color="#0000ff" />
+            )}
           </View>
         </View>
         {/* <View style={styles.sliderContainer}>
@@ -720,7 +771,7 @@ export default function Analytics() {
         {/* {prediction.probability === 0 &&
           Alert.alert("This crop might not do well in this area")} */}
 
-        {longitude && latitude && weatherData ? (
+        {/* {longitude && latitude && weatherData ? (
           <View>
             {lineChart}
             {barRainfallChart}
@@ -924,7 +975,7 @@ export default function Analytics() {
               }}
             />
           </>
-        )}
+        )} */}
 
         <StatusBar style="auto" />
       </View>

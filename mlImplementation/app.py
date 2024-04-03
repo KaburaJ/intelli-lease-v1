@@ -1,48 +1,63 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pickle
 import numpy as np
+import pickle
+import logging
 
 app = Flask(__name__)
 CORS(app)
 
-# Load the trained model
-with open('NBClassifier.pkl', 'rb') as file:
-    model = pickle.load(file)
+model = None
 
+def load_model(model_path):
+    global model
+    try:
+        with open(model_path, 'rb') as file:
+            model = pickle.load(file)
+    except Exception as e:
+        logging.error(f"Error loading model: {e}")
+
+load_model('NBClassifier.pkl')
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json()
-    features = data['features']
+    global model
+    if model is None:
+        return jsonify({'error': 'Model not loaded'})
 
-    features = list(features.values())
+    try:
+        data = request.get_json()
+        features = data.get('features')
 
-    input_data = np.array([features], dtype=float)
+        if not features:
+            return jsonify({'error': 'No features provided'})
 
-    predicted_proba = model.predict_proba(input_data)
+        K = features.get('K')
+        N = features.get('N')
+        P = features.get('P')
+        humidity = features.get('humidity')
+        pH = features.get('pH')
+        rainfall = features.get('rainfall')
+        temperature = features.get('temperature')
 
-    class_labels = model.classes_
+        prediction = model.predict([[N, P, K, temperature, humidity, pH, rainfall]])
 
-    predicted_class_index = np.argmax(predicted_proba)
+        probabilities = model.predict_proba([[N, P, K, temperature, humidity, pH, rainfall]])
 
-    predicted_class = class_labels[predicted_class_index]
-    predicted_probability = predicted_proba[0][predicted_class_index]
+        response = {
+            'predicted_class': prediction[0],
+            'probability': float(np.max(probabilities)),
+            'other_classes': {}
+        }
 
-    # Prepare response
-    response = {
-        'predicted_class': predicted_class,
-        'probability': float(predicted_probability),
-        'other_classes': {}
-    }
+        class_labels = model.classes_
+        for i, class_label in enumerate(class_labels):
+            response['other_classes'][class_label] = float(probabilities[0][i])
 
-    # Add probabilities of other classes
-    for i, class_label in enumerate(class_labels):
-        if i != predicted_class_index:
-            response['other_classes'][class_label] = float(predicted_proba[0][i])
-
-    return jsonify(response)
-
+        return jsonify(response)
+    except Exception as e:
+        logging.error(f"Prediction error: {e}")
+        return jsonify({'error': 'Prediction failed'})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

@@ -19,7 +19,7 @@ export default function AdminLandListings() {
   const navigation = useNavigation();
   const [details, setDetails] = useState({
     token:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiIxQjhERkYxRC1DQzQxLTQyMkEtOUI1NC1DMkYyMjBDMUVFOTEiLCJpYXQiOjE3MDk5Njc4MDQsImV4cCI6MTcxMjU1OTgwNH0.LoPrjnsCOZj3AQ1WNEmSD-XQuLlSI9ATXaLRjsc2AJE",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiI0MTUwQ0UwRC1FMjg1LTQ2RDMtOUJDRC1GRTdGN0Q0RjY5RjAiLCJpYXQiOjE3MTIwNzk3NzAsImV4cCI6MTcxNDY3MTc3MH0.gMC0zEXLFIwkRQQbzjoz6gE-cHpwUeUo9yvEwcrwo8M",
   });
   const [loading, setLoading] = useState(true)
 

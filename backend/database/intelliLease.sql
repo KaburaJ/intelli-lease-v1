@@ -1,4 +1,4 @@
-CREATE DATABASE intelliLease
+--CREATE DATABASE intelliLease
 
 USE intelliLease
 

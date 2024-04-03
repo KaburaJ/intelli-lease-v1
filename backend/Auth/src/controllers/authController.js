@@ -120,7 +120,6 @@ connection.on("connect", function (err) {
 
 module.exports = {
   registerUser: async (req, res) => {
-    console.log(process.env.DB_USER);
     try {
       const { error, value } = userSchema.validate(req.body);
       if (error) {
@@ -134,29 +133,33 @@ module.exports = {
   
       if (sql.connected) {
         const request = new mssql.Request(sql);
-        request
-          .input("FirstName", user.FirstName)
-          .input("LastName", user.LastName)
-          .input("UserEmail", user.UserEmail)
-          .input("UserPasswordHash", hashedPassword);
+        request.input("UserEmail", user.UserEmail);
   
-        const results = await request.execute("dbo.AddUser");
-  
-        console.log("Results:", results); // Log the results
-  
-        if (results && results.recordset && results.recordset.length > 0) {
-          res.json(results.recordset[0]);
-          console.log(results);
-        } else {
-          console.error("No results found");
-          res.status(500).send("No results found");
+        // Check if user already exists with the provided email
+        const checkUserQuery = "SELECT * FROM Users WHERE UserEmail = @UserEmail";
+        const existingUserResult = await request.query(checkUserQuery);
+        if (existingUserResult.recordset.length > 0) {
+          return res.status(400).json({ error: "User already exists with this email" });
         }
   
-        // const emailBody = await ejs.renderFile(
-        //   path.join(__dirname, "../views/email.ejs"),
-        //   { userName: user.FirstName }
-        // );
-        // sendMail(user.UserEmail, "Verification Email", emailBody);
+        // If user does not exist, proceed with registration
+        request.input("FirstName", user.FirstName)
+          .input("LastName", user.LastName)
+          .input("UserPasswordHash", hashedPassword);
+  
+        try {
+          const results = await request.execute("dbo.AddUser");
+          console.log("Results:", results); // Log the results
+  
+          if (results && results.rowsAffected && results.rowsAffected[0] === 1) {
+            // Return success message
+            res.status(200).json({ message: "User added successfully" });
+          }
+        } catch (error) {
+          // Handle the error raised by the stored procedure
+          console.error("Error adding user:", error.message);
+          res.status(400).json({ error: error.message });
+        }
       }
     } catch (e) {
       console.error(e);
