@@ -33,6 +33,10 @@ export default function Analytics() {
   const [loadingTemperature, setLoadingTemperature] = useState(false);
   const [loadingHumidity, setLoadingHumidity] = useState(false);
   const [loadingNitrogen, setLoadingNitrogen] = useState(false);
+  const [loadingMap, setLoadingMap] = useState(true);
+  const [loadingClimateData, setLoadingClimateData] = useState(true);
+  const [loadingSoilData, setLoadingSoilData] = useState(true);
+  const [loadingPrediction, setLoadingPrediction] = useState(true);
   const [form, setForm] = useState({
     N: 0,
     P: 0,
@@ -65,6 +69,7 @@ export default function Analytics() {
   }, [form]);
 
   const handlePredict = async () => {
+    setLoadingPrediction(true);
     console.log("form: ", form);
     try {
       // Convert form data to features format
@@ -95,16 +100,23 @@ export default function Analytics() {
         JSON.stringify(countyPrediction)
       );
 
-      if (response.data.probability === 0) {
-        Alert.alert("Warning", "This crop might not do well in this area");
-      } else {
-        Alert.alert(
-          "Crop Probability",
-          `Probability of growing ${selectedCrop}: ${
-            response.data.probability * 100
-          }%`
-        );
+      if (selectedCrop) {
+        const otherClasses = response.data.other_classes;
+        const probability = otherClasses[selectedCrop];
+
+        if (probability === 0) {
+          Alert.alert("Warning", "This crop might not do well in this area");
+          setSelectedCrop("");
+        } else {
+          const probabilityPercentage = (probability * 100).toFixed(2);
+          Alert.alert(
+            "Crop Probability",
+            `Probability of growing ${selectedCrop} is about ${probabilityPercentage}%. \n\nSpecifically, ${probability}`
+          );
+          setSelectedCrop("");
+        }
       }
+      setLoadingPrediction(false);
     } catch (error) {
       console.error("Error predicting:", error);
     }
@@ -179,39 +191,55 @@ export default function Analytics() {
     }
   }, [geojsonData, selectedCropClass]);
 
+  useEffect(() => {
+    setLoadingMap(false);
+  }, [latitude, longitude]);
+
+  useEffect(() => {
+    if (weatherData) {
+      setLoadingClimateData(false);
+    }
+  }, [weatherData]);
+
+  useEffect(() => {
+    if (!loadingPhosphorus && !loadingPotassium && !loadingNitrogen && !loadingPH) {
+      setLoadingSoilData(false);
+    }
+  }, [loadingPhosphorus, loadingPotassium, loadingNitrogen, loadingPH]);
+
   const handlePickerChange = (itemValue) => {
     setSelectedCrop(itemValue);
     setSelectedCropClass(itemValue);
     setSelectedCropColor(itemValue ? "red" : "rgba(131, 167, 234, 1)");
     setThreshold(10);
 
-    setPieChartTitle(
-      `Crop classes and their distribution - ${itemValue || "All Crops"}`
-    );
-    setLineChartTitle(
-      `Visual of Arable land Areas and crops grown - ${
-        itemValue || "All Crops"
-      }`
-    );
-    setBarTempChartTitle(
-      `Temperature Data Visualization for ${itemValue || "All Crops"}`
-    );
-    setBarHumidChartTitle(
-      `Humidity Data Visualization for ${itemValue || "All Crops"}`
-    );
-    setBarPotassiumChartTitle(
-      `Potassium Data Visualization for ${itemValue || "All Crops"}`
-    );
-    setBarPhosphorousChartTitle(
-      `Phosphorous Data Visualization for ${itemValue || "All Crops"}`
-    );
-    setBarPHChartTitle(`PH Data Visualization for ${itemValue || "All Crops"}`);
-    setBarNitrogenChartTitle(
-      `Nitrogen Data Visualization for ${itemValue || "All Crops"}`
-    );
-    setBarChartTitle(
-      `Rainfall Data Visualization for ${itemValue || "All Crops"}`
-    );
+    // setPieChartTitle(
+    //   `Crop classes and their distribution - ${itemValue || "All Crops"}`
+    // );
+    //   setLineChartTitle(
+    //     `Visual of Arable land Areas and crops grown - ${
+    //       itemValue || "All Crops"
+    //     }`
+    //   );
+    //   setBarTempChartTitle(
+    //     `Temperature Data Visualization for ${itemValue || "All Crops"}`
+    //   );
+    //   setBarHumidChartTitle(
+    //     `Humidity Data Visualization for ${itemValue || "All Crops"}`
+    //   );
+    //   setBarPotassiumChartTitle(
+    //     `Potassium Data Visualization for ${itemValue || "All Crops"}`
+    //   );
+    //   setBarPhosphorousChartTitle(
+    //     `Phosphorous Data Visualization for ${itemValue || "All Crops"}`
+    //   );
+    //   setBarPHChartTitle(`PH Data Visualization for ${itemValue || "All Crops"}`);
+    //   setBarNitrogenChartTitle(
+    //     `Nitrogen Data Visualization for ${itemValue || "All Crops"}`
+    //   );
+    //   setBarChartTitle(
+    //     `Rainfall Data Visualization for ${itemValue || "All Crops"}`
+    //   );
   };
 
   const line = {
@@ -428,8 +456,8 @@ export default function Analytics() {
       setForm((prevForm) => ({ ...prevForm, K: potassiumValue }));
     } catch (error) {
       console.log(error);
-    }finally {
-      setLoadingPotassium(false); 
+    } finally {
+      setLoadingPotassium(false);
     }
   };
   const getNitrogenData = async () => {
@@ -443,8 +471,8 @@ export default function Analytics() {
       setForm((prevForm) => ({ ...prevForm, N: nitrogenValue }));
     } catch (error) {
       console.log(error);
-    }finally {
-      setLoadingNitrogen(false); 
+    } finally {
+      setLoadingNitrogen(false);
     }
   };
   const getPHData = async () => {
@@ -458,8 +486,8 @@ export default function Analytics() {
       setForm((prevForm) => ({ ...prevForm, pH: phValue }));
     } catch (error) {
       console.log(error);
-    }finally {
-      setLoadingPH(false); 
+    } finally {
+      setLoadingPH(false);
     }
   };
 
@@ -481,20 +509,24 @@ export default function Analytics() {
           temperature: data.hourly.temperature_2m[data.hourly.time.length - 2],
           humidity:
             data.hourly.relative_humidity_2m[data.hourly.time.length - 2],
-          rainfall: averagePrecipitation * 10000, // Convert to mm
+          rainfall: averagePrecipitation * 1000,
         }));
       }
     } catch (error) {
       console.error("Error fetching weather data:", error);
-    }finally {
-      setLoadingTemperature(false); 
-      setLoadingHumidity(false); 
-      setLoadingRainfall(false); 
+    } finally {
+      setLoadingTemperature(false);
+      setLoadingHumidity(false);
+      setLoadingRainfall(false);
     }
   };
 
   if (longitude && latitude) {
     useEffect(() => {
+      setLoadingMap(true);
+      setLoadingClimateData(true);
+      setLoadingSoilData(true);
+      setLoadingPrediction(true);
       getClimateData();
       getPhosphorousData();
       getPotassiumData();
@@ -505,6 +537,7 @@ export default function Analytics() {
 
   useEffect(() => {
     if (formFilled) {
+      setLoadingPrediction(true);
       handlePredict();
     }
   }, [formFilled]);
@@ -635,6 +668,7 @@ export default function Analytics() {
             />
           ))}
         </Picker>
+        {loadingMap && <ActivityIndicator style={styles.loadingIndicator} />}
         <MapView
           ref={mapViewRef}
           style={styles.map}
@@ -644,6 +678,7 @@ export default function Analytics() {
             latitudeDelta: 5,
             longitudeDelta: 5,
           }}
+          onMapReady={() => setLoadingMap(false)}
         >
           {polygons.map((feature, index) => (
             <Polygon
@@ -673,7 +708,7 @@ export default function Analytics() {
         <Text style={styles.subText}>Land Characteristics</Text>
         <View style={styles.card}>
           <View style={styles.cardItem}>
-            <Text style={styles.label}>Phosphorous:</Text>
+            <Text style={styles.label}>Phosphorous Levels:</Text>
             {loadingPhosphorus ? (
               <ActivityIndicator size="small" color="#0000ff" />
             ) : (
@@ -683,7 +718,7 @@ export default function Analytics() {
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
-            <Text style={styles.label}>Nitrogen:</Text>
+            <Text style={styles.label}>Nitrogen Levels:</Text>
             {loadingNitrogen ? (
               <ActivityIndicator size="small" color="#0000ff" />
             ) : (
@@ -693,7 +728,7 @@ export default function Analytics() {
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
-            <Text style={styles.label}>Potassium:</Text>
+            <Text style={styles.label}>Potassium Levels:</Text>
             {loadingPotassium ? (
               <ActivityIndicator size="small" color="#0000ff" />
             ) : (
@@ -703,7 +738,7 @@ export default function Analytics() {
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
-            <Text style={styles.label}>Humidity:</Text>
+            <Text style={styles.label}>Humidity Level:</Text>
             {loadingHumidity ? (
               <ActivityIndicator size="small" color="#0000ff" />
             ) : (
@@ -713,7 +748,7 @@ export default function Analytics() {
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
-            <Text style={styles.label}>pH:</Text>
+            <Text style={styles.label}>pH Level:</Text>
             {loadingPH ? (
               <ActivityIndicator size="small" color="#0000ff" />
             ) : (
@@ -723,11 +758,11 @@ export default function Analytics() {
         </View>
         <View style={styles.card}>
           <View style={styles.cardItem}>
-            <Text style={styles.label}>Rainfall:</Text>
+            <Text style={styles.label}>Quantity of Rainfall:</Text>
             {loadingRainfall ? (
               <ActivityIndicator size="small" color="#0000ff" />
             ) : (
-              <Text>{form.rainfall}</Text>
+              <Text>{form.rainfall.toFixed(2)}</Text>
             )}
           </View>
         </View>
@@ -745,11 +780,10 @@ export default function Analytics() {
           <View style={styles.cardItem}>
             <Text style={styles.label}>Prediction:</Text>
             {prediction.predicted_class ? (
-              <>
-                <Text>{prediction.predicted_class}</Text>
-                <Text>Probability: {prediction.probability}</Text>
-              </>
+              // <>
+              <Text>The best crop to grow is {prediction.predicted_class}</Text>
             ) : (
+              // </>
               <ActivityIndicator size="small" color="#0000ff" />
             )}
           </View>
@@ -1065,6 +1099,15 @@ const styles = StyleSheet.create({
     marginRight: 22,
     borderRadius: 25,
     backgroundColor: "#E2F6E9",
+  },
+  loadingContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingIndicator: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
   },
   rowText: {
     color: "green",

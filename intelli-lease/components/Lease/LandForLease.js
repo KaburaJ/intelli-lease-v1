@@ -60,35 +60,44 @@ export default function LandForLease() {
   console.log(countyName);
   const navigation =  useNavigation()
   const [loading, setLoading] = useState(true);
+  const { role, user } = useAuth();
   const [details, setDetails] = useState({
     token:
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiIxQjhERkYxRC1DQzQxLTQyMkEtOUI1NC1DMkYyMjBDMUVFOTEiLCJpYXQiOjE3MTAxMDg3MzEsImV4cCI6MTcxMjcwMDczMX0.4POIt3D1iUvRg9fOl52GQ92htuG2zzYh0vlK56gaKZ0",
+      "",
     userID: "",
   });
 
   const [landDetails, setLandDetails] = useState([]);
 
   useEffect(() => {
-    const getUserData = async () => {
+    const fetchToken = async () => {
       try {
-        const token = await AsyncStorage.getItem("token");
-
-        setDetails({ token: token });
+        // Check if admin user
+        if (role && role === "admin") {
+          // Manually input admin token
+          setDetails({
+            ...details,
+            token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VySUQiOiI0MTUwQ0UwRC1FMjg1LTQ2RDMtOUJDRC1GRTdGN0Q0RjY5RjAiLCJpYXQiOjE3MTIwNzk3NzAsImV4cCI6MTcxNDY3MTc3MH0.gMC0zEXLFIwkRQQbzjoz6gE-cHpwUeUo9yvEwcrwo8M",
+          });
+        } else {
+          const token = await AsyncStorage.getItem("token");
+          setDetails({ ...details, token });
+        }
         const userID = await AsyncStorage.getItem("UserID");
-        setDetails({ ...details, userID: userID });
+        setDetails((prevDetails) => ({ ...prevDetails, userID }));
       } catch (error) {
         console.error("Error retrieving user data from AsyncStorage:", error);
       }
     };
 
-    getUserData();
+    fetchToken();
   }, []);
 
   const viewPendingLeaseRequests = async () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "http://172.28.144.1:5002/user-view-approved-lease-requests-by-county",
+        "https://intelli-lease-v1-1.onrender.com/user-view-approved-lease-requests-by-county",
         {
           method: "POST",
           credentials: "include",
@@ -129,7 +138,7 @@ export default function LandForLease() {
   const handleLeaseClick = async (id) => {
     console.log("clicked");
     try {
-      const response = await fetch("http://172.28.144.1:5002/lease-land", {
+      const response = await fetch("https://intelli-lease-v1-2.onrender.com/lease-land", {
         method: "POST",
         credentials: "include",
         headers: {

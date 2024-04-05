@@ -88,8 +88,8 @@ const LeaseLandPage = () => {
       }
 
       Alert.alert(
-        "Your land is up for lease pending approval. We shall get back to you.",
         null,
+        "Your land is up for lease pending approval. We shall get back to you.",
         [{ text: "OK", onPress: () => navigation.navigate("WelcomeUserHome") }]
       );
     } catch (error) {

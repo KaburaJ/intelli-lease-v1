@@ -17,7 +17,7 @@ import { ActivityIndicator } from "react-native-paper";
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
-  const { login } = useAuth()
+  const { login } = useAuth();
 
   const [userData, setUserData] = useState({
     FirstName: "",
@@ -49,8 +49,8 @@ export default function ProfileScreen() {
           "Error retrieving user data from AsyncStorage:",
           error.message
         );
-      }finally{
-        setLoading(false)
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -64,21 +64,22 @@ export default function ProfileScreen() {
           ? JSON.stringify({ UserID: userData.UserID, token: userData.Token })
           : "{}";
 
-      const response = await fetch("https://intelli-lease-v1.onrender.com/user/logout", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: logoutData,
-      });
+      const response = await fetch(
+        "https://intelli-lease-v1.onrender.com/user/logout",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: logoutData,
+        }
+      );
 
       if (!response.ok) {
         console.error("Error logging out:", response.status);
         return;
       }
-
-
 
       Alert.alert(
         "You are about to log out.",
@@ -92,7 +93,7 @@ export default function ProfileScreen() {
             text: "Ok",
             style: "default",
             onPress: () => {
-              login(false)
+              login(false);
               navigation.navigate("Landing");
             },
           },
@@ -103,15 +104,13 @@ export default function ProfileScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={[styles.mainContainer, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="green" />
-      </View>
-    );
-  }
-
   return (
+    <>
+      {loading ? (
+        <View style={[styles.mainContainer, styles.loadingContainer]}>
+          <ActivityIndicator size="large" color="green" />
+        </View>
+      ) : (
     <ScrollView>
       <View style={[styles.mainContainer]}>
         <View>
@@ -291,6 +290,8 @@ export default function ProfileScreen() {
         </View>
       </View>
     </ScrollView>
+      )}
+      </>
   );
 }
 

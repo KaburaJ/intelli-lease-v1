@@ -24,20 +24,20 @@ export default function AdminLandListings() {
   const [loading, setLoading] = useState(true)
 
   const [landDetails, setLandDetails] = useState([]);
-  useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        setDetails((prevDetails) => ({ ...prevDetails, token: token }));
-      } catch (error) {
-        console.error(
-          "Error retrieving user data from AsyncStorage:",
-          error.message
-        );
-      }
-    };
-    getUserData();
-  }, []);
+  // useEffect(() => {
+    // const getUserData = async () => {
+    //   try {
+    //     const token = await AsyncStorage.getItem("token");
+    //     setDetails((prevDetails) => ({ ...prevDetails, token: token }));
+    //   } catch (error) {
+    //     console.error(
+    //       "Error retrieving user data from AsyncStorage:",
+    //       error.message
+    //     );
+    //   }
+    // };
+    // getUserData();
+  // }, []);
 
   const viewPendingLeaseRequests = async () => {
     try {

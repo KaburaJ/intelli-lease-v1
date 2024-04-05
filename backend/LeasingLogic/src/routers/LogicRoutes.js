@@ -29,6 +29,7 @@ const {
 const userMiddleware = require("../middlewares/userMiddlewares");
 const { log } = require("console");
 
+logicRoutes.post('/user-view-approved-lease-requests-by-county', UserViewApprovedLeaseRequestsByCounty)
 logicRoutes.use(userMiddleware);
 logicRoutes.post('/edit-username', EditUsername)
 logicRoutes.post('/create-profile', CreateProfile)
@@ -41,7 +42,6 @@ logicRoutes.post('/withdraw-land-leasing-details', withdrawLandLeasingDetails)
 logicRoutes.post('/update-land-size-details', UpdateLandSizeDetails)
 logicRoutes.post('/user-view-pending-lease-requests', UserViewPendingLeaseRequests)
 logicRoutes.post('/user-view-approved-lease-requests', UserViewApprovedLeaseRequests)
-logicRoutes.post('/user-view-approved-lease-requests-by-county', UserViewApprovedLeaseRequestsByCounty)
 logicRoutes.post('/approve-withdraw-lease-request', ApproveWithdrawLeaseRequest)
 logicRoutes.post('/approve-lease-request', ApproveLeaseRequest)
 logicRoutes.post('/decline-lease-request', DeclineLeaseRequest)

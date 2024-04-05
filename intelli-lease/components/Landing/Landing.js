@@ -12,13 +12,16 @@ import SignUp from "./SignUp";
 import LogIn from "./LogIn";
 import logo from "../../assets/app-logo.png";
 import { Image } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
+import { ActivityIndicator } from "react-native-paper";
+
 
 export default function LandingPage() {
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
-
+  const [loading, setLoading] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
 
   const navigation = useNavigation();
@@ -29,6 +32,7 @@ export default function LandingPage() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <ScrollView>
       <View style={{marginTop:'3%'}}>
         <Image
           source={logo}
@@ -36,7 +40,7 @@ export default function LandingPage() {
             width: 400,
             height: 100,
             borderRadius: 50,
-            marginLeft:'3%',
+            marginLeft:'0%',
             marginTop:'2%',
             alignItems:'center',
             resizeMode: "cover",
@@ -63,6 +67,7 @@ export default function LandingPage() {
           </Text>
         </TouchableOpacity>
       )}
+    </ScrollView>
     </SafeAreaView>
   );
 }
@@ -129,7 +134,7 @@ const styles = StyleSheet.create({
     color: "#222",
   },
   switchButton: {
-    marginTop: "165%",
+    marginTop: "180%",
     marginLeft: "7%",
     position: "absolute",
   },

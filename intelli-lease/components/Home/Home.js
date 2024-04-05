@@ -18,6 +18,7 @@ import { Button } from "react-native-paper";
 import logo from "../../assets/app-logo.png";
 import homeImg from "../../assets/surveyor1.png";
 import { Image } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 export default function Home() {
   const route = useRoute()
@@ -26,6 +27,7 @@ export default function Home() {
   const [isPlacesClicked, setIsPlacesClicked] = useState(true);
   const [selectedText, setSelectedText] = useState("Places");
   const navigation = useNavigation();
+  const [loading, setLoading] = useState(false)
 
   const user = route.params && route.params.user;
   // console.log(route.params);
@@ -135,7 +137,7 @@ export default function Home() {
                 style={{
                   width: 450,
                   height: 250,
-                  marginLeft: "3%",
+                  marginLeft: "0%",
                   alignItems: "center",
                   marginTop: "2%",
                   marginBottom: "4%",
@@ -206,7 +208,7 @@ export default function Home() {
                   <TouchableOpacity
                     key={index}
                     style={styles.row}
-                    onPress={() => handleCountyNameClick(county.admin_name)}
+                    onPress={() => handleCountyNameClick(county.city)}
                   >
                     <Text style={styles.rowText}>{county.admin_name}</Text>
                   </TouchableOpacity>

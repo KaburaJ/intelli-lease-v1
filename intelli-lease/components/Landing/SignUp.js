@@ -9,10 +9,11 @@ import {
   TextInput,
   Alert,
 } from "react-native";
+import { ActivityIndicator } from "react-native-paper";
 
 const SignUp = () => {
   const navigation = useNavigation();
-
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     FirstName: "",
     LastName: "",
@@ -32,7 +33,7 @@ const SignUp = () => {
         Alert.alert("Passwords do not match");
         return;
       }
-  
+      setLoading(true)
       const response = await fetch("https://intelli-lease-v1.onrender.com/user/signup", {
         method: "POST",
         headers: {
@@ -48,8 +49,9 @@ const SignUp = () => {
       }
   
       const responseData = await response.json();
+      console.log(responseData);
       const userData = responseData[0];
-  
+      setLoading(false)
       Alert.alert("Sign up successful", "Login?", [
         {
           text: "OK",
@@ -60,8 +62,10 @@ const SignUp = () => {
         },
       ]);
     } catch (error) {
-      console.error("Error signing up:", error.message);
+      Alert.alert("User already exists with this email")
+      setLoading(false)
     }
+
   };  
 
   return (
@@ -147,7 +151,7 @@ const SignUp = () => {
           <View style={styles.formAction}>
             <TouchableOpacity onPress={handleSignUp}>
               <View style={styles.btn}>
-                <Text style={styles.btnText}>Sign Up</Text>
+                {loading? (<ActivityIndicator/>):(<Text style={styles.btnText}>Sign Up</Text>)}
               </View>
             </TouchableOpacity>
           </View>

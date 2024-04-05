@@ -95,11 +95,11 @@ export default function Predictions() {
               //   onPress: handleHistoryClick,
               //   marginTop: "3.5%",
               // },
-              {
-                text: "Summary",
-                onPress: handleSummaryClick,
-                marginTop: "3.5%",
-              },
+              // {
+              //   text: "Summary",
+              //   onPress: handleSummaryClick,
+              //   marginTop: "3.5%",
+              // },
               {
                 text: "Info",
                 onPress: handleInfoClick,

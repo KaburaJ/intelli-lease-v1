@@ -12,11 +12,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../AuthContext";
 import jwtDecode from "jwt-decode";
+import { ActivityIndicator } from "react-native-paper";
 
 export default function LogIn({ onSwitchToSignUp }) {
   const navigation = useNavigation();
   const { login } = useAuth();
-
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     UserEmail: "",
     UserPasswordHash: "",
@@ -155,7 +156,7 @@ export default function LogIn({ onSwitchToSignUp }) {
           <View style={styles.formAction}>
             <TouchableOpacity onPress={handleLogIn}>
               <View style={styles.btn}>
-                <Text style={styles.btnText}>Log in</Text>
+              {loading? (<ActivityIndicator/>):(<Text style={styles.btnText}>Login</Text>)}
               </View>
             </TouchableOpacity>
           </View>
