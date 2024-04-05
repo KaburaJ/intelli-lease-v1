@@ -62,8 +62,7 @@ export default function LandForLease() {
   const [loading, setLoading] = useState(true);
   const { role, user } = useAuth();
   const [details, setDetails] = useState({
-    token:
-      "",
+    token: "",
     userID: "",
   });
 
@@ -133,12 +132,10 @@ export default function LandForLease() {
     viewPendingLeaseRequests();
   }, [countyName]);
 
-  console.log(details);
 
   const handleLeaseClick = async (id) => {
-    console.log("clicked");
     try {
-      const response = await fetch("https://intelli-lease-v1-2.onrender.com/lease-land", {
+      const response = await fetch("https://intelli-lease-v1-1.onrender.com/lease-land", {
         method: "POST",
         credentials: "include",
         headers: {
